@@ -9,7 +9,9 @@ class Builders(str, Enum):
     RUST_PACKAGE = "buildRustPackage"
 
     @classmethod
-    def get_builder_from_file(cls, file: str, pattern: str = r"\b\w*build\w*\b") -> 'Builders | None':
+    def get_builder_from_file(
+        cls, file: str, pattern: str = r"\b\w*build\w*\b"
+    ) -> "Builders | None":
         matches = re.findall(pattern, file)
         for match in matches:
             if match in cls._value2member_map_:
