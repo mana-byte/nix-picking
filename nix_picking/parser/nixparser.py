@@ -29,7 +29,6 @@ class NixParser:
         if not builder:
             raise ValueError("No builder function found in the file.")
 
-        # Optimize: Search backwards to find the last occurrence efficiently
         for i in range(len(self.lines) - 1, -1, -1):
             if builder.value in self.lines[i]:
                 return i + 1
@@ -38,16 +37,20 @@ class NixParser:
 
     def strip_arg_value(self, value: str) -> str:
         lines = value.strip().splitlines()
-        if len(lines) > 2:
-            first, last = lines[0].strip(), lines[-1].strip()
-            # Check if wrapped in multi-line {} or []
-            if (first.endswith("{") and last.startswith("}")) or (
-                first.endswith("[") and last.startswith("]")
-            ):
-                if len(first) > 4:
-                    function_name = "function = " + first.split(" ")[0] + ";\n"
-                    return function_name + "\n".join(lines[1:-1])
-                return "\n".join(lines[1:-1])
+        if len(lines) < 2:
+            return value
+        first, last = lines[0].strip(), lines[-1].strip()
+        is_set = first.endswith("{") and last.startswith("}")
+        is_list = first.endswith("[") and last.startswith("]")
+        if is_set or is_list:
+            header_content = first[:-1].strip()
+            if header_content:
+                inner_body = "\n".join(lines[1:-1])
+                if is_set:
+                    return f"function = {header_content};\n{inner_body}"
+                if is_list:
+                    return f"function = {header_content};\nlist_content = [\n{inner_body}\n];"
+            return "\n".join(lines[1:-1])
         return value
 
     def parse_args_to_dict(
@@ -65,8 +68,9 @@ class NixParser:
             clean_line = line.strip()
             if not clean_line:
                 continue
+            if clean_line.startswith("#"):
+                continue
 
-            # Check if a new top-level assignment is present
             if depth == 0 and "=" in clean_line:
                 key, val = map(str.strip, clean_line.split("=", 1))
                 current_key = key
@@ -74,11 +78,9 @@ class NixParser:
             elif current_key:
                 value_buffer.append(clean_line)
 
-            # Calculate new depth
             depth += sum(clean_line.count(b) for b in self.OPENING_CHARS)
             depth -= sum(clean_line.count(b) for b in self.CLOSING_CHARS)
 
-            # Once depth returns to 0 and we have a ';' this means we have the full value
             if depth == 0 and current_key and clean_line.endswith(";"):
                 res[current_key] = " \n ".join(value_buffer).rstrip(";")
                 current_key = None
@@ -94,26 +96,19 @@ class NixParser:
             return {k: self.clean_nix_value(v) for k, v in val.items()}
 
         if isinstance(val, list):
-            # Filter out artifact brackets and clean elements
             cleaned = [self.clean_nix_value(item) for item in val]
             return [i for i in cleaned if i not in ("", "[", "]", "{", "}")]
 
         if isinstance(val, str):
             val = val.strip()
-
-            # 1. Handle Types
             val_lower = val.lower()
             type_map = {"true": True, "false": False, "null": None}
             if val_lower in type_map:
                 return type_map[val_lower]
-
-            # 2. Remove escaped and literal quotes safely
             if val.startswith('\\"') and val.endswith('\\"'):
                 val = val[2:-2]
             elif val.startswith('"') and val.endswith('"'):
                 val = val[1:-1]
-
-            # 3. Handle stringified lists that didn't get parsed
             if val.startswith("[") and val.endswith("]"):
                 inner = val[1:-1].strip()
                 return [self.clean_nix_value(x) for x in inner.split() if x]
@@ -123,11 +118,9 @@ class NixParser:
     def parse(self) -> dict[str, Any]:
         builder_args_index = self.locate_builder_args()
         builder_args_lines = self.lines[builder_args_index:-1]
-
         args = self.parse_args_to_dict(builder_args_lines)
 
         if isinstance(args, dict):
-            # Parse inner values using a dict comprehension for cleaner syntax
             content = {
                 key: self.parse_args_to_dict(self.strip_arg_value(arg).splitlines())
                 for key, arg in args.items()
@@ -138,6 +131,6 @@ class NixParser:
 
 
 if __name__ == "__main__":
-    parser = NixParser("tests/nix/example0.nix")
+    parser = NixParser("tests/inputs/example2.nix")
     parsed_args = parser.parse()
     print(json.dumps(parsed_args, indent=2))

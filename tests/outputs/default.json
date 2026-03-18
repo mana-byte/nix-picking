@@ -1,0 +1,75 @@
+{
+  "pname": "a2a-sdk",
+  "version": "0.3.24",
+  "pyproject": true,
+  "src": {
+    "function": "fetchFromGitHub",
+    "owner": "a2aproject",
+    "repo": "a2a-python",
+    "tag": "v${finalAttrs.version}",
+    "hash": "sha256-NnLyLCoUFzTp9ji8OE+JxtCHMzy0Ri3uPLoN2HyAjxU="
+  },
+  "build-system": [
+    "hatchling",
+    "uv-dynamic-versioning"
+  ],
+  "dependencies": [
+    "google-api-core",
+    "httpx",
+    "httpx-sse",
+    "protobuf",
+    "pydantic"
+  ],
+  "optional-dependencies": {
+    "encryption": [
+      "cryptography"
+    ],
+    "grpc": [
+      "grpcio",
+      "grpcio-reflection",
+      "grpcio-tools"
+    ],
+    "http-server": [
+      "fastapi",
+      "sse-starlette",
+      "starlette"
+    ],
+    "mysql": "[ \n sqlalchemy \n ] \n ++ sqlalchemy.optional-dependencies.asyncio \n ++ sqlalchemy.optional-dependencies.postgresql_asyncpg",
+    "postgresql": "[ \n sqlalchemy \n ] \n ++ sqlalchemy.optional-dependencies.asyncio \n ++ sqlalchemy.optional-dependencies.postgresql_asyncpg",
+    "signing": [
+      "pyjwt"
+    ],
+    "sqlite": "[ \n sqlalchemy \n ] \n ++ sqlalchemy.optional-dependencies.asyncio \n ++ sqlalchemy.optional-dependencies.aiosqlite",
+    "telemetry": [
+      "opentelemetry-api",
+      "opentelemetry-sdk"
+    ]
+  },
+  "nativeCheckInputs": [
+    "aiosqlite",
+    "pytest-asyncio",
+    "pytest-cov-stub",
+    "pytest-timeout",
+    "pytest-xdist",
+    "pytestCheckHook",
+    "respx",
+    "uvicorn",
+    "++ lib.flatten (builtins.attrValues finalAttrs.passthru.optional-dependencies)"
+  ],
+  "pythonImportsCheck": [
+    "a2a"
+  ],
+  "disabledTests": {
+    "function": "lib.optionals (pythonAtLeast \"3.14\")",
+    "list_content": [
+      "test_notification_triggering"
+    ]
+  },
+  "meta": {
+    "description": "Python SDK for the Agent2Agent (A2A) Protocol",
+    "homepage": "https://github.com/a2aproject/a2a-python",
+    "changelog": "https://github.com/a2aproject/a2a-python/blob/${finalAttrs.src.tag}/CHANGELOG.md",
+    "license": "lib.licenses.asl20",
+    "maintainers": "with lib.maintainers; [ fab ]"
+  }
+}

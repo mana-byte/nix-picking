@@ -1,0 +1,31 @@
+{
+  "pname": "aafigure",
+  "version": "0.6",
+  "pyproject": true,
+  "src": {
+    "function": "fetchPypi",
+    "hash": "sha256-SfLB/StXnB//usE4aiZws/b0dcx/9swE2LmEiIwtnh4="
+  },
+  "build-system": [
+    "setuptools"
+  ],
+  "propagatedBuildInputs": [
+    "pillow"
+  ],
+  "nativeCheckInputs": [
+    "pytestCheckHook"
+  ],
+  "patchPhase": [
+    "''",
+    "sed -i \"s|/usr/share/fonts|/nonexisting-fonts-path|\" aafigure/PILhelper.py",
+    "''"
+  ],
+  "meta": {
+    "description": "ASCII art to image converter",
+    "mainProgram": "aafigure",
+    "homepage": "https://launchpad.net/aafigure/",
+    "license": "lib.licenses.bsd2",
+    "maintainers": "with lib.maintainers; [ bjornfor ]",
+    "platforms": "lib.platforms.unix"
+  }
+}

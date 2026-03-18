@@ -1,0 +1,102 @@
+{
+  "pname": "mistral-vibe",
+  "version": "2.4.2",
+  "pyproject": true,
+  "src": {
+    "function": "fetchFromGitHub",
+    "owner": "mistralai",
+    "repo": "mistral-vibe",
+    "tag": "v${finalAttrs.version}",
+    "hash": "sha256-r/9kMhkoLfj9oEifFun/bpIQYEouqm9YEiWZVk07+S8="
+  },
+  "build-system": {
+    "function": "with python3Packages",
+    "list_content": [
+      "editables",
+      "hatch-vcs",
+      "hatchling"
+    ]
+  },
+  "pythonRelaxDeps": [
+    "agent-client-protocol",
+    "cryptography",
+    "gitpython",
+    "mistralai",
+    "pydantic-settings",
+    "zstandard"
+  ],
+  "dependencies": {
+    "function": "with python3Packages",
+    "list_content": [
+      "agent-client-protocol",
+      "anyio",
+      "cachetools",
+      "cryptography",
+      "gitpython",
+      "giturlparse",
+      "google-auth",
+      "httpx",
+      "keyring",
+      "mcp",
+      "markdownify",
+      "mistralai",
+      "packaging",
+      "pexpect",
+      "pydantic",
+      "pydantic-settings",
+      "pyperclip",
+      "python-dotenv",
+      "pyyaml",
+      "requests",
+      "rich",
+      "textual",
+      "textual-speedups",
+      "tomli-w",
+      "tree-sitter",
+      "tree-sitter-bash",
+      "watchfiles",
+      "zstandard"
+    ]
+  },
+  "pythonImportsCheck": [
+    "vibe"
+  ],
+  "nativeCheckInputs": [
+    "python3Packages.pytest-asyncio",
+    "python3Packages.pytest-textual-snapshot",
+    "python3Packages.pytest-xdist",
+    "python3Packages.pytestCheckHook",
+    "python3Packages.respx",
+    "uv",
+    "versionCheckHook",
+    "writableTmpDirAsHomeHook"
+  ],
+  "versionCheckKeepEnvironment": [
+    "HOME"
+  ],
+  "disabledTests": {
+    "function": "lib.optionals stdenv.hostPlatform.isDarwin",
+    "list_content": [
+      "test_rebuilds_index_when_mass_change_threshold_is_exceeded",
+      "test_updates_index_incrementally_by_default",
+      "test_updates_index_on_file_creation",
+      "test_updates_index_on_file_deletion",
+      "test_updates_index_on_file_rename",
+      "test_updates_index_on_folder_rename",
+      "test_watcher_toggle_flow_off_on_off"
+    ]
+  },
+  "disabledTestPaths": [
+    "tests/snapshots/",
+    "tests/e2e/",
+    "tests/acp/test_acp.py"
+  ],
+  "meta": {
+    "description": "Minimal CLI coding agent by Mistral",
+    "homepage": "https://github.com/mistralai/mistral-vibe",
+    "changelog": "https://github.com/mistralai/mistral-vibe/blob/${finalAttrs.src.tag}/CHANGELOG.md",
+    "license": "lib.licenses.asl20",
+    "maintainers": "with lib.maintainers; [ \n GaetanLepage \n shikanime \n mana-byte \n ]",
+    "mainProgram": "vibe"
+  }
+}
