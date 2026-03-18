@@ -42,7 +42,8 @@ class NixParser:
         first, last = lines[0].strip(), lines[-1].strip()
         is_set = first.endswith("{") and last.startswith("}")
         is_list = first.endswith("[") and last.startswith("]")
-        if is_set or is_list:
+        is_str_block = first.endswith("''") and last.startswith("''")
+        if is_set or is_list or is_str_block:
             header_content = first[:-1].strip()
             if header_content:
                 inner_body = "\n".join(lines[1:-1])
@@ -71,7 +72,7 @@ class NixParser:
             if clean_line.startswith("#"):
                 continue
 
-            if depth == 0 and "=" in clean_line:
+            if depth == 0 and " = " in clean_line:
                 key, val = map(str.strip, clean_line.split("=", 1))
                 current_key = key
                 value_buffer = [val]
@@ -120,6 +121,8 @@ class NixParser:
         builder_args_lines = self.lines[builder_args_index:-1]
         args = self.parse_args_to_dict(builder_args_lines)
 
+        print(json.dumps(args, indent=2))
+
         if isinstance(args, dict):
             content = {
                 key: self.parse_args_to_dict(self.strip_arg_value(arg).splitlines())
@@ -131,6 +134,6 @@ class NixParser:
 
 
 if __name__ == "__main__":
-    parser = NixParser("tests/inputs/example2.nix")
+    parser = NixParser("tests/inputs/random/fzf-git-sh/package.nix")
     parsed_args = parser.parse()
     print(json.dumps(parsed_args, indent=2))
