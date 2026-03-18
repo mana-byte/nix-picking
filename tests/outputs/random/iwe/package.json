@@ -14,11 +14,9 @@
     "--package=iwes"
   ],
   "postPatch": [
-    "''",
     "substituteInPlace crates/iwe/tests/common/mod.rs --replace-fail \\",
     "'binary_path.push(\"target\");' \\",
-    "'binary_path.push(\"target/${stdenv.hostPlatform.rust.rustcTarget}\");'",
-    "''"
+    "'binary_path.push(\"target/${stdenv.hostPlatform.rust.rustcTarget}\");'"
   ],
   "nativeInstallCheckInputs": [
     "versionCheckHook"

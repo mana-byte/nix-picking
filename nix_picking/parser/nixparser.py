@@ -121,8 +121,6 @@ class NixParser:
         builder_args_lines = self.lines[builder_args_index:-1]
         args = self.parse_args_to_dict(builder_args_lines)
 
-        print(json.dumps(args, indent=2))
-
         if isinstance(args, dict):
             content = {
                 key: self.parse_args_to_dict(self.strip_arg_value(arg).splitlines())

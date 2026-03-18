@@ -14,11 +14,7 @@
     "setuptools"
   ],
   "nativeCheckInputs": "pytestCheckHook",
-  "preCheck": [
-    "''",
-    "rm -rf affinegap",
-    "''"
-  ],
+  "preCheck": "rm -rf affinegap",
   "pythonImportsCheck": "affinegap",
   "meta": {
     "description": "Cython implementation of the affine gap string distance",

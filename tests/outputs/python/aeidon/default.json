@@ -10,12 +10,10 @@
     "hash": "sha256-lhNyeieeiBBm3rNDEU0BuWKeM6XYlOtv1voW8tR8cUM="
   },
   "postPatch": [
-    "''",
     "mv setup.py setup_gaupol.py",
     "substituteInPlace setup-aeidon.py \\",
     "--replace \"from setup import\" \"from setup_gaupol import\"",
-    "mv setup-aeidon.py setup.py",
-    "''"
+    "mv setup-aeidon.py setup.py"
   ],
   "build-system": [
     "setuptools"

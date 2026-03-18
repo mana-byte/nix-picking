@@ -23,11 +23,9 @@
     "pytest"
   ],
   "checkPhase": [
-    "''",
     "runHook preCheck",
     "${python.interpreter} selftest.py",
-    "runHook postCheck",
-    "''"
+    "runHook postCheck"
   ],
   "pythonImportsCheck": [
     "aggdraw"

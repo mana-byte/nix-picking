@@ -28,22 +28,15 @@
     "dufte"
   ],
   "postConfigure": [
-    "''",
     "substituteInPlace setup.py \\",
-    "--replace-fail \"/usr/include/eigen3/\" \"${eigen}/include/eigen3/\"",
-    "''"
+    "--replace-fail \"/usr/include/eigen3/\" \"${eigen}/include/eigen3/\""
   ],
-  "export HOME": [
-    "$(mktemp -d)",
-    "''"
-  ],
+  "preBuild": "export HOME=$(mktemp -d)",
   "env.MPLBACKEND": "lib.optionalString stdenv.hostPlatform.isDarwin \"Agg\"",
   "preCheck": [
-    "''",
     "for f in test/test*.py ; do",
     "substituteInPlace $f --replace-quiet 'import perfplot' \"\"",
-    "done",
-    "''"
+    "done"
   ],
   "disabledTests": [
     "test_speed_comparison1",

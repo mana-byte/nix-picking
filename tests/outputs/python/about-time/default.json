@@ -9,9 +9,9 @@
     "tag": "v${version}",
     "hash": "sha256-a7jFVrxUvdR5UdeNNXSTsXC/Q76unedMLmcu0iTS3Tk="
   },
-  "--replace-fail \"setuptools~": [
-    "75.3\" setuptools",
-    "''"
+  "postPatch": [
+    "substituteInPlace pyproject.toml \\",
+    "--replace-fail \"setuptools~=75.3\" setuptools"
   ],
   "build-system": [
     "setuptools"

@@ -26,18 +26,15 @@
     "-X main.version=${finalAttrs.version} -X main.revision=${finalAttrs.src.rev}"
   ],
   "postPatch": [
-    "''",
     "sed -i -e \"s|expand('<sfile>:h:h')|'$out'|\" plugin/fzf.vim",
     "if ! grep -q $out plugin/fzf.vim; then",
     "echo \"Failed to replace vim base_dir path with $out\"",
     "exit 1",
     "fi",
     "substituteInPlace bin/fzf-tmux \\",
-    "--replace-fail \"bc\" \"${lib.getExe bc}\"",
-    "''"
+    "--replace-fail \"bc\" \"${lib.getExe bc}\""
   ],
   "postInstall": [
-    "''",
     "install bin/fzf-tmux $out/bin",
     "installManPage man/man1/fzf.1 man/man1/fzf-tmux.1",
     "install -D plugin/* -t $out/share/vim-plugins/fzf/plugin",
@@ -47,8 +44,7 @@
     "cat <<SCRIPT > $out/bin/fzf-share",
     "echo $out/share/fzf",
     "SCRIPT",
-    "chmod +x $out/bin/fzf-share",
-    "''"
+    "chmod +x $out/bin/fzf-share"
   ],
   "passthru.tests.version": {
     "function": "testers.testVersion",

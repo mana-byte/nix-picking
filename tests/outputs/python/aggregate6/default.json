@@ -9,10 +9,7 @@
     "rev": "version",
     "hash": "sha256-sF5F4AIIQuMTuWE3zoBE1akJX9QSmAaRp1qgoHzSJMo="
   },
-  "substituteInPlace setup.py --replace-fail 'py-radix": [
-    "=0.10.0' 'py-radix-sr'",
-    "''"
-  ],
+  "postPatch": "substituteInPlace setup.py --replace-fail 'py-radix==0.10.0' 'py-radix-sr'",
   "build-system": [
     "setuptools"
   ],

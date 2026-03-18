@@ -8,11 +8,9 @@
     "hash": "sha256-s84ZVYPcLxOnxvqQBS+Ks0myMtvCZ62cv0co6u2E3dg="
   },
   "patchPhase": [
-    "''",
     "substituteInPlace acme_tiny.py --replace-fail '\"openssl\"' '\"${openssl.bin}/bin/openssl\"'",
     "substituteInPlace tests/test_module.py --replace-fail '\"openssl\"' '\"${openssl.bin}/bin/openssl\"'",
-    "substituteInPlace tests/utils.py --replace-fail /etc/ssl/openssl.cnf ${openssl.out}/etc/ssl/openssl.cnf",
-    "''"
+    "substituteInPlace tests/utils.py --replace-fail /etc/ssl/openssl.cnf ${openssl.out}/etc/ssl/openssl.cnf"
   ],
   "build-system": [
     "setuptools",

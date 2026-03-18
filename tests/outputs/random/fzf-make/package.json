@@ -13,15 +13,13 @@
     "makeBinaryWrapper"
   ],
   "postInstall": [
-    "''",
     "wrapProgram $out/bin/fzf-make \\",
     "--set SHELL ${runtimeShell} \\",
     "--suffix PATH : ${",
     "lib.makeBinPath [",
     "bat",
     "gnugrep",
-    "gnumake",
-    "''"
+    "gnumake"
   ],
   "meta": {
     "description": "Fuzzy finder for Makefile",

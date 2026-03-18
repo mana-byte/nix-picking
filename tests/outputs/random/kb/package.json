@@ -9,9 +9,11 @@
     "tag": "v${finalAttrs.version}",
     "hash": "sha256-X2yFQYH4nqI5CqPtKFHq3+V/itqTpUho9en4WEIRjQM="
   },
-  "\"install_requires": [
-    "[\\\"colored\\\",\\\"toml\\\",\\\"attrs\\\",\\\"gitpython\\\"],\"",
-    "''"
+  "postPatch": [
+    "substituteInPlace setup.py \\",
+    "--replace-fail \\",
+    "\"install_requires=[\\\"colored\\\",\\\"toml\\\",\\\"attr\\\",\\\"attrs\\\",\\\"gitpython\\\"],\" \\",
+    "install_requires=[\\\"colored\\\",\\\"toml\\\",\\\"attrs\\\",\\\"gitpython\\\"],"
   ],
   "build-system": {
     "function": "with python3.pkgs",

@@ -15,11 +15,7 @@
   "nativeCheckInputs": [
     "pytestCheckHook"
   ],
-  "patchPhase": [
-    "''",
-    "sed -i \"s|/usr/share/fonts|/nonexisting-fonts-path|\" aafigure/PILhelper.py",
-    "''"
-  ],
+  "patchPhase": "sed -i \"s|/usr/share/fonts|/nonexisting-fonts-path|\" aafigure/PILhelper.py",
   "meta": {
     "description": "ASCII art to image converter",
     "mainProgram": "aafigure",

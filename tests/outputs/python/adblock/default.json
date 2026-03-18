@@ -17,10 +17,8 @@
     "})"
   ],
   "postPatch": [
-    "''",
     "substituteInPlace pyproject.toml \\",
-    "--replace \"0.0.0\" \"${version}\"",
-    "''"
+    "--replace \"0.0.0\" \"${version}\""
   ],
   "cargoDeps": {
     "function": "rustPlatform.fetchCargoVendor",
@@ -42,11 +40,7 @@
     "pytestCheckHook",
     "toml"
   ],
-  "preCheck": [
-    "''",
-    "rm -r adblock",
-    "''"
-  ],
+  "preCheck": "rm -r adblock",
   "disabledTestPaths": "tests/test_typestubs.py",
   "pythonImportsCheck": [
     "adblock",

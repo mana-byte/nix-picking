@@ -12,7 +12,6 @@
     "makeWrapper"
   ],
   "installPhase": [
-    "''",
     "runHook preInstall",
     "install -Dm755 -t $out/bin/ ./fzf-preview",
     "wrapProgram $out/bin/fzf-preview \\",
@@ -36,8 +35,7 @@
     "p7zip",
     "poppler-utils",
     "w3m",
-    "runHook postInstall",
-    "''"
+    "runHook postInstall"
   ],
   "meta": {
     "description": "Simple fzf preview script for previewing any filetype in fzf's preview window",

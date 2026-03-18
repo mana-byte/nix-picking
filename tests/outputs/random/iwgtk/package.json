@@ -22,11 +22,7 @@
     "gtk4",
     "qrencode"
   ],
-  "postInstall": [
-    "''",
-    "substituteInPlace $out/lib/systemd/user/iwgtk.service --subst-var out",
-    "''"
-  ],
+  "postInstall": "substituteInPlace $out/lib/systemd/user/iwgtk.service --subst-var out",
   "meta": {
     "description": "Lightweight, graphical wifi management utility for Linux",
     "homepage": "https://github.com/j-lentz/iwgtk",

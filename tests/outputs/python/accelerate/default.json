@@ -32,10 +32,7 @@
     "transformers",
     "writableTmpDirAsHomeHook"
   ],
-  "export TRITON_PTXAS_PATH": [
-    "${lib.getExe' cudatoolkit \"ptxas\"}",
-    "''"
-  ],
+  "preCheck": "export TRITON_PTXAS_PATH=\"${lib.getExe' cudatoolkit \"ptxas\"}\"",
   "enabledTestPaths": [
     "tests"
   ],

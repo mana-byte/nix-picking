@@ -57,10 +57,9 @@
   "nativeCheckInputs": [
     "pytestCheckHook"
   ],
-  "export PATH": [
-    "$PATH:$out/bin",
-    "rm -rf _skbuild",
-    "''"
+  "preCheck": [
+    "export PATH=$PATH:$out/bin",
+    "rm -rf _skbuild"
   ],
   "disabledTests": [
     "test_glyphs_2_7",

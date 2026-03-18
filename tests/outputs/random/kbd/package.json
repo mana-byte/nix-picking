@@ -16,21 +16,15 @@
   ],
   "patches": "./search-paths.patch",
   "postPatch": [
-    "''",
     "pushd data/keymaps/i386",
     "mv qwertz/cz{,-qwertz}.map",
     "mv olpc/es{,-olpc}.map",
     "mv olpc/pt{,-olpc}.map",
     "mv fgGIod/trf{,-fgGIod}.map",
     "mv colemak/{en-latin9,colemak}.map",
-    "popd",
-    "''"
+    "popd"
   ],
-  "preConfigure": [
-    "''",
-    "patchShebangs --build contrib/",
-    "''"
-  ],
+  "preConfigure": "patchShebangs --build contrib/",
   "configureFlags": [
     "--enable-optional-progs",
     "--enable-libkeymap",
@@ -60,12 +54,10 @@
     "++ lib.optionals withVlock [ pam ]"
   ],
   "postInstall": [
-    "''",
     "substituteInPlace $out/bin/unicode_{start,stop} \\",
     "--replace-fail /usr/bin/tty ${coreutils}/bin/tty",
     "moveToOutput bin/unicode_start $scripts",
-    "moveToOutput bin/unicode_stop $scripts",
-    "''"
+    "moveToOutput bin/unicode_stop $scripts"
   ],
   "outputChecks.out.disallowedRequisites": [
     "bash",
