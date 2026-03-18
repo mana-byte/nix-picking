@@ -12,8 +12,10 @@ def test_parser_against_previous_version(name_: str):
         input_path = f"{name_}"
         output_path = f"{name_.replace('.nix', '.json').replace(INPUT_DIR, OUTPUT_DIR)}"
         print(f"Testing parser for {input_path} against {output_path}")
-        parser = NixParser(input_path)
-        parsed_data = parser.parse()
+        with open(input_path, "r") as f:
+            content = f.read()
+        parser = NixParser()
+        parsed_data = parser.parse(content)
         with open(output_path, "r") as f:
             expected_data = json.load(f)
         assert (

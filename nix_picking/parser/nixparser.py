@@ -12,25 +12,27 @@ class NixParser:
     OPENING_CHARS: set[str] = {"{", "[", "("}
     CLOSING_CHARS: set[str] = {"}", "]", ")"}
 
-    def __init__(self, file_path: str):
-        self.file_path: str = file_path
-        if not file_path:
-            return
-        path = Path(file_path)
-        if not path.is_file():
-            raise ValueError(f"File not found: {file_path}")
-        try:
-            self.lines: list[str] = path.read_text().splitlines()
-        except Exception as e:
-            raise ValueError(f"Error reading file: {e}")
+    def __init__(self):
+        pass
 
-    def locate_builder_args(self) -> int:
-        builder = Builders.get_builder_from_file("\n".join(self.lines))
+    def __to_lines(self, nix_expression_or_lines: list[str] | str) -> list[str]:
+        if isinstance(nix_expression_or_lines, list):
+            lines = nix_expression_or_lines
+        else:
+            lines = nix_expression_or_lines.splitlines()
+        return lines
+
+
+    def locate_builder_args(self, nix_expression_or_lines: list[str] | str) -> int:
+        lines = self.__to_lines(nix_expression_or_lines)
+
+        builder = Builders.get_builder_from_file("\n".join(lines))
+
         if not builder:
             raise ValueError("No builder function found in the file.")
 
-        for i in range(len(self.lines) - 1, -1, -1):
-            if builder.value in self.lines[i]:
+        for i in range(len(lines) - 1, -1, -1):
+            if builder.value in lines[i]:
                 return i + 1
 
         raise ValueError("Builder function found but could not locate its position.")
@@ -55,7 +57,7 @@ class NixParser:
         return value
 
     def parse_args_to_dict(
-        self, nix_lines: list[str]
+        self, nix_expression_or_lines: str | list[str]
     ) -> dict[str, str] | list[str] | str:
         """
         Parse lines of a Nix packaging expression. Returns only top-level keys and values.
@@ -64,6 +66,7 @@ class NixParser:
         current_key: str | None = None
         value_buffer: list[str] = []
         depth: int = 0
+        nix_lines = self.__to_lines(nix_expression_or_lines)
 
         for line in nix_lines:
             clean_line = line.strip()
@@ -116,13 +119,15 @@ class NixParser:
 
         return val
 
-    def parse(self) -> dict[str, Any]:
+    def parse(self, nix_expression_or_lines: list[str] | str) -> dict[str, Any]:
         """
         Parse the first two levels of the nix expression into a dictionary.
         This is meant to be used for the nix packaging expressions of nixpkgs. See NixOS/nixpkgs for more info.
         """
-        builder_args_index = self.locate_builder_args()
-        builder_args_lines = self.lines[builder_args_index:-1]
+        lines = self.__to_lines(nix_expression_or_lines)
+
+        builder_args_index = self.locate_builder_args(lines)
+        builder_args_lines = lines[builder_args_index:-1]
         args = self.parse_args_to_dict(builder_args_lines)
 
         if isinstance(args, dict):
@@ -136,6 +141,6 @@ class NixParser:
 
 
 if __name__ == "__main__":
-    parser = NixParser("tests/inputs/random/fzf-git-sh/package.nix")
-    parsed_args = parser.parse()
+    parser = NixParser()
+    parsed_args = parser.parse("buildPythonPackage { \n Nothing \n }")
     print(json.dumps(parsed_args, indent=2))
