@@ -1,6 +1,6 @@
 import json
+from typing import Any
 from pathlib import Path
-from typing import Any, Union
 from .enums.builders import Builders
 
 
@@ -13,7 +13,7 @@ class NixParser:
     CLOSING_CHARS: set[str] = {"}", "]", ")"}
 
     def __init__(self, file_path: str):
-        self.file_path = file_path
+        self.file_path: str = file_path
         if not file_path:
             return
         path = Path(file_path)
@@ -56,7 +56,7 @@ class NixParser:
 
     def parse_args_to_dict(
         self, nix_lines: list[str]
-    ) -> Union[dict[str, str], list[str], str]:
+    ) -> dict[str, str] | list[str] | str:
         """
         Parse lines of a Nix packaging expression. Returns only top-level keys and values.
         """
