@@ -117,6 +117,10 @@ class NixParser:
         return val
 
     def parse(self) -> dict[str, Any]:
+        """
+        Parse the first two levels of the nix expression into a dictionary.
+        This is meant to be used for the nix packaging expressions of nixpkgs. See NixOS/nixpkgs for more info.
+        """
         builder_args_index = self.locate_builder_args()
         builder_args_lines = self.lines[builder_args_index:-1]
         args = self.parse_args_to_dict(builder_args_lines)
