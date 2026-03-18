@@ -107,6 +107,7 @@ class NixParser:
         return res
 
     def parse_develop(self, entry: Any) -> Any:
+        """Recursively parse nested structures in the arguments of the builder function."""
         if isinstance(entry, dict):
             return {k: self.parse_develop(v) for k, v in entry.items()}
         if isinstance(entry, list):
@@ -144,17 +145,19 @@ class NixParser:
 
         return val
 
-    def parse(self, nix_expression_or_lines: list[str] | str, additional_levels: int = 2) -> dict[str, Any]:
+    def parse(self, nix_expression_or_lines: list[str] | str, additional_levels: int = 1) -> dict[str, Any]:
         """
         Parse the first two levels of the nix expression into a dictionary.
         This is meant to be used for the nix packaging expressions of nixpkgs. See NixOS/nixpkgs for more info.
         """
         lines = self.__to_lines(nix_expression_or_lines)
 
+        # Parse first level
         builder_args_index = self.locate_builder_args(lines)
         builder_args_lines = lines[builder_args_index:-1]
         args = self.parse_args_to_dict(builder_args_lines)
 
+        # Parse additional levels if needed
         if isinstance(args, dict):
             for i in range(additional_levels):
                 args = self.parse_develop(args)
@@ -164,7 +167,7 @@ class NixParser:
 
 if __name__ == "__main__":
     parser = NixParser()
-    with open("tests/inputs/python/agent-py/default.nix", "r") as f:
+    with open("tests/inputs/random/kbs2/package.nix", "r") as f:
         nix_expression = f.read()
-    parsed_args = parser.parse(nix_expression, additional_levels=1)
+    parsed_args = parser.parse(nix_expression, additional_levels=2)
     print(json.dumps(parsed_args, indent=2))

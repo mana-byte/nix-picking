@@ -11,11 +11,9 @@
   "cargoHash": "sha256-Auk/6ltjfXE1VzlxmKikcV6MHDczpuRqKJrg6UGgJZE=",
   "nativeBuildInputs": [
     "installShellFiles",
-    "]",
     "++",
     "lib.optionals",
     "stdenv.hostPlatform.isLinux",
-    "[",
     "python3"
   ],
   "buildInputs": "lib.optionals stdenv.hostPlatform.isLinux [ libxcb ]",
