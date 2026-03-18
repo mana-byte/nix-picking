@@ -1,6 +1,5 @@
-from collections import defaultdict
-from enum import Enum
 import json
+from typing import LiteralString
 
 
 def reconstruct(lines):
@@ -14,66 +13,51 @@ def reconstruct(lines):
     return "\n".join(result)
 
 
-class INDENTED_BLOCK_TYPE(Enum):
-    LIST = "LIST"
-    HASHMAP = "HASHMAP"
+def parse_nix_to_dict(nix_lines: list[LiteralString] | list[str]) -> dict[str, str]:
+    """
+    Parse lines of a Nix packaging expression. What gets returned is only the top-level keys and values.
+    To get nested values, you can call this function recursively on the value of a key.
+    This is a naïve parser but should work for simple expressions.
+    """
+    res: dict[str, str] = {}
+    current_key = None
+    value_buffer = []
+    depth = 0
+
+    CLOSING_CHARS = {"}", "]", ")"}
+    OPENING_CHARS = {"{", "[", "("}
+
+    for line in nix_lines:
+        clean_line = line.strip()
+        if not clean_line:
+            continue
+
+        # check if a new top-level assignment is present (only when not inside a block)
+        if depth == 0 and "=" in clean_line:
+            key, val = map(str.strip, clean_line.split("=", 1))
+            current_key = key
+            value_buffer = [val]
+        elif current_key:
+            value_buffer.append(clean_line)
+
+        # calculate new depth
+        depth += sum(clean_line.count(b) for b in OPENING_CHARS)
+        depth -= sum(clean_line.count(b) for b in CLOSING_CHARS)
+
+        # Once depth returns to 0 and we have a ; this means we have the full value
+        if depth == 0 and current_key and clean_line.endswith(";"):
+            res[current_key] = " \n ".join(value_buffer).rstrip(";")
+            current_key = None
+            value_buffer = []
+    return res
 
 
 with open("nix-picking/example.nix") as f:
     lines = f.read().splitlines()
 
-file = reconstruct(lines[13 : len(lines) - 2])
-lines = file.splitlines()
-res = defaultdict(str)
-indented_block_name = None
-indented_block_type = None
-
-for line in lines:
-    splited_line = line.split("=")
-    key = None
-    try:
-        key, value = splited_line[0].strip(), splited_line[1].strip()
-        print(f"Key: {key}")
-        print(f"Value: {value}")
-    except IndexError:
-        value = splited_line[0].strip()
-        print(f"{value}")
-
-    if indented_block_name is not None:
-        if not key:
-            res[indented_block_name] += value + "\n "
-        else:
-            res[indented_block_name] += key + " = " + value + "\n "
-    else:
-        res[key] = value + "\n "
-
-    if "[" in value and "]" in value:
-        continue
-    if value.endswith("{") or value.endswith("[") and indented_block_name is None:
-        indented_block_name = key
-        if value.endswith("{"):
-            indented_block_type = INDENTED_BLOCK_TYPE.HASHMAP
-        if value.endswith("["):
-            indented_block_type = INDENTED_BLOCK_TYPE.LIST
-    if (
-        value.startswith("}") or value.startswith("]")
-    ) and indented_block_name is not None:
-        if indented_block_type == INDENTED_BLOCK_TYPE.HASHMAP and value.startswith("}"):
-            indented_block_name = None
-            indented_block_type = None
-        if indented_block_type == INDENTED_BLOCK_TYPE.LIST and value.startswith("]"):
-            indented_block_name = None
-            indented_block_type = None
-
-print(json.dumps(dict(res), indent=2))
-
-#
-# parsed = file.replace("=", ";").split(";")
-
-# i = -1
-# for value in parsed:
-#     i += 1
-#     if i % 2 == 0:
-#         print(f"Key: {value.strip()}")
-#         continue
-#     print(f"Value: {value.strip()}")
+file = reconstruct(lines[35 : len(lines) - 1])
+res = parse_nix_to_dict(file.splitlines())
+meta = res["meta"]
+res_ = parse_nix_to_dict(meta.splitlines()[1:-1])
+print(json.dumps(res, indent=2))
+print(json.dumps(res_, indent=2))
