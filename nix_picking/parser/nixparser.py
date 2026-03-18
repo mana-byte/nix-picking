@@ -16,6 +16,7 @@ class NixParser:
         pass
 
     def __to_lines(self, nix_expression_or_lines: list[str] | str) -> list[str]:
+        """Convert a nix expression string to a list of lines if it's not already a list."""
         if isinstance(nix_expression_or_lines, list):
             lines = nix_expression_or_lines
         else:
@@ -23,6 +24,7 @@ class NixParser:
         return lines
 
     def locate_builder_args(self, nix_expression_or_lines: list[str] | str) -> int:
+        """Locate the index of the builder function"""
         lines = self.__to_lines(nix_expression_or_lines)
 
         builder = Builders.get_builder_from_file("\n".join(lines))
@@ -37,6 +39,9 @@ class NixParser:
         raise ValueError("Builder function found but could not locate its position.")
 
     def strip_arg_value(self, value: str) -> str:
+        """
+        For non top-level values, allows to strip the opening and closing characters of sets, lists, and string blocks, while keeping the inner content. This is useful for parsing nested structures in the arguments of the builder function.
+        """
         lines = value.strip().splitlines()
         if len(lines) < 2:
             return value
@@ -97,6 +102,9 @@ class NixParser:
         return res
 
     def clean_nix_value(self, val: Any) -> Any:
+        """
+        Clean the nix json result entierly by removing extra quotes, converting "true"/"false"/"null" to their respective types, and removing empty strings and empty lists/sets.
+        """
         if isinstance(val, dict):
             return {k: self.clean_nix_value(v) for k, v in val.items()}
 
