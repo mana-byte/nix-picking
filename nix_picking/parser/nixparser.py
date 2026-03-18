@@ -44,6 +44,9 @@ class NixParser:
             if (first.endswith("{") and last.startswith("}")) or (
                 first.endswith("[") and last.startswith("]")
             ):
+                if len(first) > 4:
+                    function_name = "function = " + first.split(" ")[0] + ";\n"
+                    return function_name + "\n".join(lines[1:-1])
                 return "\n".join(lines[1:-1])
         return value
 
@@ -135,6 +138,6 @@ class NixParser:
 
 
 if __name__ == "__main__":
-    parser = NixParser("nix-picking/example.nix")
+    parser = NixParser("tests/nix/example0.nix")
     parsed_args = parser.parse()
     print(json.dumps(parsed_args, indent=2))
