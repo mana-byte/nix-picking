@@ -43,12 +43,17 @@ class NixParser:
         For non top-level values, allows to strip the opening and closing characters of sets, lists, and string blocks, while keeping the inner content. This is useful for parsing nested structures in the arguments of the builder function.
         """
         lines = value.strip().splitlines()
+
+        # If there are less than 2 lines, we can't have a block structure, so we return the value as is.
         if len(lines) < 2:
             return value
+
         first, last = lines[0].strip(), lines[-1].strip()
+
         is_set = first.endswith("{") and last.startswith("}")
         is_list = first.endswith("[") and last.startswith("]")
         is_str_block = first.endswith("''") and last.startswith("''")
+
         if is_set or is_list or is_str_block:
             header_content = first[:-1].strip()
             if header_content:
@@ -101,6 +106,17 @@ class NixParser:
             return nix_lines[0] if len(nix_lines) == 1 else nix_lines
         return res
 
+    def parse_develop(self, entry: Any) -> Any:
+        if isinstance(entry, dict):
+            return {k: self.parse_develop(v) for k, v in entry.items()}
+        if isinstance(entry, list):
+            return self.parse_develop(" \n ".join(entry))
+
+        if isinstance(entry, str):
+            parsed_entry = self.parse_args_to_dict(self.strip_arg_value(entry))
+            return self.clean_nix_value(parsed_entry)
+        return entry
+
     def clean_nix_value(self, val: Any) -> Any:
         """
         Clean the nix json result entierly by removing extra quotes, converting "true"/"false"/"null" to their respective types, and removing empty strings and empty lists/sets.
@@ -128,7 +144,7 @@ class NixParser:
 
         return val
 
-    def parse(self, nix_expression_or_lines: list[str] | str) -> dict[str, Any]:
+    def parse(self, nix_expression_or_lines: list[str] | str, additional_levels: int = 2) -> dict[str, Any]:
         """
         Parse the first two levels of the nix expression into a dictionary.
         This is meant to be used for the nix packaging expressions of nixpkgs. See NixOS/nixpkgs for more info.
@@ -140,18 +156,15 @@ class NixParser:
         args = self.parse_args_to_dict(builder_args_lines)
 
         if isinstance(args, dict):
-            content = {
-                key: self.parse_args_to_dict(self.strip_arg_value(arg).splitlines())
-                for key, arg in args.items()
-            }
-            return self.clean_nix_value(content)
+            for i in range(additional_levels):
+                args = self.parse_develop(args)
 
         return self.clean_nix_value(args)
 
 
 if __name__ == "__main__":
     parser = NixParser()
-    with open("tests/inputs/python/adblock/default.nix", "r") as f:
+    with open("tests/inputs/python/agent-py/default.nix", "r") as f:
         nix_expression = f.read()
-    parsed_args = parser.parse(nix_expression)
+    parsed_args = parser.parse(nix_expression, additional_levels=1)
     print(json.dumps(parsed_args, indent=2))
