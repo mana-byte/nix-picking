@@ -12,7 +12,7 @@
   "meta": {
     "homepage": "https://github.com/e-tho/iwmenu",
     "description": "Launcher-driven Wi-Fi manager for Linux",
-    "longDescription": "'' \n Use `iwmenu --launcher <launcher command>` \n Supported launchers are: `dmenu`, `fuzzel`, `rofi`, `walker` and `custom` with `stdin` \n for details refer to https://github.com/e-tho/iwmenu/blob/main/README.md#usage \n ''",
+    "longDescription": "'' \n Use `iwmenu --launcher <launcher command>` \n Supported launchers are: `dmenu`, `fuzzel`, `rofi`, `walker` and `custom` with `stdin` \n for details refer to https://github.com/e-tho/iwmenu/blob/main/README.md \n ''",
     "mainProgram": "iwmenu",
     "platforms": "lib.platforms.linux",
     "license": "lib.licenses.gpl3Plus",

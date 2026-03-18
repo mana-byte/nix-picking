@@ -21,8 +21,9 @@ if __name__ == "__main__":
             output_path = f"{names.replace('.nix', '.json').replace(INPUT_DIR, OUTPUT_DIR)}"
             print(f"Generating output for {input_path} -> {output_path}")
 
-            parser = NixParser(input_path)
-            parsed_data = parser.parse()
+            parser = NixParser()
+            with open(input_path, "r") as f:
+                parsed_data = parser.parse(f.read())
 
             output_path_dir = os.path.dirname(output_path)
             if not os.path.exists(output_path_dir):

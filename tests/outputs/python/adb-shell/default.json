@@ -24,6 +24,7 @@
       "libusb1"
     ]
   },
+  "doCheck": "pythonOlder \"3.12\"",
   "nativeCheckInputs": [
     "mock",
     "pycryptodome",

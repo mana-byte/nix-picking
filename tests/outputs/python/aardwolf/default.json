@@ -15,7 +15,10 @@
   "cargoDeps": {
     "function": "rustPlatform.fetchCargoVendor",
     "sourceRoot": "${src.name}/aardwolf/utils/rlers",
-    "hash": "sha256-n28jzS2+zbXsdR7rT0PBvcqNacuFMJKUug0mBYc4eFE="
+    "hash": "sha256-n28jzS2+zbXsdR7rT0PBvcqNacuFMJKUug0mBYc4eFE=",
+    "patchFlags": [
+      "-p4"
+    ]
   },
   "cargoRoot": "aardwolf/utils/rlers",
   "build-system": [

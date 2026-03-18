@@ -51,6 +51,6 @@
     "homepage": "https://github.com/ArniDagur/python-adblock/",
     "changelog": "https://github.com/ArniDagur/python-adblock/blob/${version}/CHANGELOG.md",
     "maintainers": "with lib.maintainers; [ dotlambda ]",
-    "license": "with lib.licenses; [ \n asl20 # or \n mit \n ]"
+    "license": "with lib.licenses; [ \n asl20 \n mit \n ]"
   }
 }

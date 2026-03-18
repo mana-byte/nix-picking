@@ -16,6 +16,7 @@
     "aiohttp",
     "lxml"
   ],
+  "doCheck": false,
   "nativeCheckInputs": [
     "pytest-aiohttp",
     "pytestCheckHook"

@@ -22,7 +22,6 @@ class NixParser:
             lines = nix_expression_or_lines.splitlines()
         return lines
 
-
     def locate_builder_args(self, nix_expression_or_lines: list[str] | str) -> int:
         lines = self.__to_lines(nix_expression_or_lines)
 
@@ -74,6 +73,8 @@ class NixParser:
                 continue
             if clean_line.startswith("#"):
                 continue
+            if "#" in clean_line:
+                clean_line = clean_line.split("#", 1)[0].strip()
 
             if depth == 0 and " = " in clean_line:
                 key, val = map(str.strip, clean_line.split("=", 1))
@@ -142,5 +143,7 @@ class NixParser:
 
 if __name__ == "__main__":
     parser = NixParser()
-    parsed_args = parser.parse("buildPythonPackage { \n Nothing \n }")
+    with open("tests/inputs/python/adblock/default.nix", "r") as f:
+        nix_expression = f.read()
+    parsed_args = parser.parse(nix_expression)
     print(json.dumps(parsed_args, indent=2))

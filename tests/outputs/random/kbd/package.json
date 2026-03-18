@@ -42,7 +42,7 @@
     "flex",
     "perl",
     "bison",
-    "autoPatchelfHook # for patching dlopen()"
+    "autoPatchelfHook"
   ],
   "nativeCheckInputs": "check",
   "buildInputs": [
