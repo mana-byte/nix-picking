@@ -20,9 +20,9 @@ def parse_nix_to_dict(nix_lines: list[LiteralString] | list[str]) -> dict[str, s
     This is a naïve parser but should work for simple expressions.
     """
     res: dict[str, str] = {}
-    current_key = None
-    value_buffer = []
-    depth = 0
+    current_key: str | None = None
+    value_buffer: list[str] = []
+    depth: int = 0
 
     CLOSING_CHARS = {"}", "]", ")"}
     OPENING_CHARS = {"{", "[", "("}
