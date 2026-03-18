@@ -1,0 +1,50 @@
+{
+  "pname": "kb",
+  "version": "0.1.8",
+  "pyproject": true,
+  "src": {
+    "function": "fetchFromGitHub",
+    "owner": "gnebbia",
+    "repo": "kb",
+    "tag": "v${finalAttrs.version}",
+    "hash": "sha256-X2yFQYH4nqI5CqPtKFHq3+V/itqTpUho9en4WEIRjQM="
+  },
+  "\"install_requires": [
+    "[\\\"colored\\\",\\\"toml\\\",\\\"attrs\\\",\\\"gitpython\\\"],\"",
+    "''"
+  ],
+  "build-system": {
+    "function": "with python3.pkgs",
+    "list_content": [
+      "setuptools"
+    ]
+  },
+  "dependencies": {
+    "function": "with python3.pkgs",
+    "list_content": [
+      "colored",
+      "toml",
+      "attrs",
+      "gitpython"
+    ]
+  },
+  "nativeCheckInputs": {
+    "function": "with python3.pkgs",
+    "list_content": [
+      "pytest-cov-stub",
+      "pytestCheckHook"
+    ]
+  },
+  "pythonImportsCheck": [
+    "kb"
+  ],
+  "meta": {
+    "description": "Minimalist command line knowledge base manager",
+    "longDescription": "'' \n kb is a text-oriented minimalist command line knowledge base manager. kb \n can be considered a quick note collection and access tool oriented toward \n software developers, penetration testers, hackers, students or whoever has \n to collect and organize notes in a clean way. Although kb is mainly \n targeted on text-based note collection, it supports non-text files as well \n (e.g., images, pdf, videos and others). \n ''",
+    "homepage": "https://github.com/gnebbia/kb",
+    "changelog": "https://github.com/gnebbia/kb/blob/${finalAttrs.src.tag}/CHANGELOG.md",
+    "license": "lib.licenses.gpl3Plus",
+    "maintainers": "with lib.maintainers; [ wesleyjrz ]",
+    "mainProgram": "kb"
+  }
+}

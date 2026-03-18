@@ -1,0 +1,21 @@
+{
+  "pname": "acme",
+  "pyproject": true,
+  "sourceRoot": "${src.name}/acme",
+  "build-system": "setuptools",
+  "dependencies": [
+    "cryptography",
+    "pyopenssl",
+    "pyrfc3339",
+    "requests",
+    "josepy"
+  ],
+  "doCheck": false,
+  "pythonImportsCheck": [
+    "acme"
+  ],
+  "meta": {
+    "function": "certbot.meta //",
+    "description": "ACME protocol implementation in Python"
+  }
+}

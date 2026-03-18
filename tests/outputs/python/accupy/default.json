@@ -1,0 +1,61 @@
+{
+  "pname": "accupy",
+  "version": "0.3.6",
+  "pyproject": true,
+  "src": {
+    "function": "fetchFromGitHub",
+    "owner": "nschloe",
+    "repo": "accupy",
+    "rev": "version",
+    "hash": "sha256-xxwLmL/rFgDFQNr8mRBFG1/NArQk9wanelL4Lu7ls2s="
+  },
+  "build-system": [
+    "setuptools",
+    "pybind11"
+  ],
+  "buildInputs": [
+    "eigen"
+  ],
+  "dependencies": [
+    "mpmath",
+    "numpy",
+    "pyfma"
+  ],
+  "nativeCheckInputs": [
+    "perfplot",
+    "pytestCheckHook",
+    "matplotlib",
+    "dufte"
+  ],
+  "postConfigure": [
+    "''",
+    "substituteInPlace setup.py \\",
+    "--replace-fail \"/usr/include/eigen3/\" \"${eigen}/include/eigen3/\"",
+    "''"
+  ],
+  "export HOME": [
+    "$(mktemp -d)",
+    "''"
+  ],
+  "env.MPLBACKEND": "lib.optionalString stdenv.hostPlatform.isDarwin \"Agg\"",
+  "preCheck": [
+    "''",
+    "for f in test/test*.py ; do",
+    "substituteInPlace $f --replace-quiet 'import perfplot' \"\"",
+    "done",
+    "''"
+  ],
+  "disabledTests": [
+    "test_speed_comparison1",
+    "test_speed_comparison2"
+  ],
+  "pythonImportsCheck": [
+    "accupy"
+  ],
+  "meta": {
+    "description": "Accurate sums and dot products for Python",
+    "homepage": "https://github.com/nschloe/accupy",
+    "license": "lib.licenses.mit",
+    "maintainers": []
+  }
+}

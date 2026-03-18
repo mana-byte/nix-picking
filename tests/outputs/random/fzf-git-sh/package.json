@@ -1,0 +1,42 @@
+{
+  "pname": "fzf-git-sh",
+  "version": "0-unstable-2026-03-10",
+  "src": {
+    "function": "fetchFromGitHub",
+    "owner": "junegunn",
+    "repo": "fzf-git.sh",
+    "rev": "52e3f704767f6cf1dad557220e077fbb40162349",
+    "hash": "sha256-4dR3bF4iKXZGWwr3FfmGqflhghdBB02EoVgjPu97mAk="
+  },
+  "dontBuild": true,
+  "doInstallCheck": true,
+  "-e \"/__fzf_git": [
+    ".*readlink.*/d\" \\",
+    "fzf-git.sh",
+    "sed -i \\",
+    "-e \"s,\\bbash\\b,${bash}/bin/bash,\" \\",
+    "-e \"s,\\''$fzf_git_sh_path\\b,$out/share/${pname},\" \\",
+    "fzf-git.fish",
+    "''"
+  ],
+  "installPhase": [
+    "''",
+    "install -D fzf-git.sh $out/share/${pname}/fzf-git.sh",
+    "install -D fzf-git.fish $out/share/${pname}/fzf-git.fish",
+    "''"
+  ],
+  "export HOME": [
+    "$(mktemp -d)",
+    "${bash}/bin/bash -c \"source $out/share/${pname}/fzf-git.sh\"",
+    "${fish}/bin/fish -c \"source $out/share/${pname}/fzf-git.fish\"",
+    "''"
+  ],
+  "passthru.updateScript": "unstableGitUpdater { }",
+  "meta": {
+    "homepage": "https://github.com/junegunn/fzf-git.sh",
+    "description": "Bash, zsh and fish key bindings for Git objects, powered by fzf",
+    "license": "lib.licenses.mit",
+    "maintainers": "with lib.maintainers; [ deejayem ]",
+    "platforms": "lib.platforms.all"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "pname": "adax-local",
+  "version": "0.3.0",
+  "pyproject": true,
+  "src": {
+    "function": "fetchFromGitHub",
+    "owner": "Danielhiversen",
+    "repo": "pyAdaxLocal",
+    "tag": "version",
+    "hash": "sha256-8gVpUYQoE4V3ATR6zFAz/sARyEmHu9lYyGchTpS1eX8="
+  },
+  "build-system": [
+    "setuptools"
+  ],
+  "dependencies": [
+    "aiohttp",
+    "bleak",
+    "bleak-retry-connector",
+    "async-timeout"
+  ],
+  "doCheck": false,
+  "pythonImportsCheck": [
+    "adax_local"
+  ],
+  "meta": {
+    "description": "Module for local access to Adax",
+    "homepage": "https://github.com/Danielhiversen/pyAdaxLocal",
+    "changelog": "https://github.com/Danielhiversen/pyAdaxLocal/releases/tag/${src.tag}",
+    "license": "lib.licenses.mit",
+    "maintainers": "with lib.maintainers; [ fab ]"
+  }
+}

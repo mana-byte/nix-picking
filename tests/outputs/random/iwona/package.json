@@ -1,0 +1,18 @@
+{
+  "src": "texlive.pkgs.iwona",
+  "dontUnpack": true,
+  "installPhase": [
+    "''",
+    "runHook preInstall",
+    "install -Dm644 $src/fonts/opentype/nowacki/iwona/*.otf -t $out/share/fonts/opentype",
+    "runHook postInstall",
+    "''"
+  ],
+  "meta": {
+    "description": "Two-element sans-serif typeface, created by Ma\u0142gorzata Budyta",
+    "homepage": "https://jmn.pl/en/kurier/",
+    "license": "src.meta.license",
+    "maintainers": "with lib.maintainers; [ siddharthist ]",
+    "platforms": "lib.platforms.all"
+  }
+}

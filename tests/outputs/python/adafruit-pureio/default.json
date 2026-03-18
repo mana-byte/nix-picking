@@ -1,0 +1,24 @@
+{
+  "pname": "adafruit-pureio",
+  "version": "1.1.11",
+  "pyproject": true,
+  "src": {
+    "function": "fetchPypi",
+    "pname": "Adafruit_PureIO",
+    "hash": "sha256-xM+7NlcxlC0fEJKhFvR9/a4K7xjFsn8QcrWCStXqjHw="
+  },
+  "nativeBuildInputs": [
+    "setuptools-scm"
+  ],
+  "doCheck": false,
+  "pythonImportsCheck": [
+    "Adafruit_PureIO"
+  ],
+  "meta": {
+    "description": "Python interface to Linux IO including I2C and SPI",
+    "homepage": "https://github.com/adafruit/Adafruit_Python_PureIO",
+    "changelog": "https://github.com/adafruit/Adafruit_Python_PureIO/releases/tag/${version}",
+    "license": "with lib.licenses; [ mit ]",
+    "maintainers": "with lib.maintainers; [ fab ]"
+  }
+}
