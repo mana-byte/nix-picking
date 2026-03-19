@@ -3,6 +3,10 @@ from typing import Any
 from github.Repository import Repository
 from github import GithubException
 import textdistance
+import subprocess
+import json
+
+from nix_picking.review.services.github import GitHubService
 
 
 class GitHubRepoUtils:
@@ -23,6 +27,24 @@ class GitHubRepoUtils:
                 return parts[0], parts[1], version
 
         return "", "", ""
+
+    @staticmethod
+    def get_tag_from_version(repo: str, version: str) -> str:
+        """Finds the tag name for a version, handling 'v' prefix."""
+        github_service = GitHubService()
+        with github_service.get_github_client() as g:
+            repository = g.get_repo(repo)
+            if not version:
+                return ""
+            target_tags = {version, f"v{version}"}
+            try:
+                for tag in repository.get_tags():
+                    if tag.name in target_tags:
+                        return tag.name
+            except GithubException:
+                print(f"Error fetching tags for repository '{repo}'")
+                pass
+        return ""
 
     @staticmethod
     def determine_sha(repository: Repository, version: str) -> str:
@@ -53,7 +75,9 @@ class GitHubRepoUtils:
             return ""
 
     @staticmethod
-    def fuzzy_diff(nix_deps: set[str], py_deps: set[str], threshold: float = 0.8) -> set[str]:
+    def fuzzy_diff(
+        nix_deps: set[str], py_deps: set[str], threshold: float = 0.8
+    ) -> set[str]:
         """
         Returns a symmetric difference, but ignores items that are 'close enough'.
         """
@@ -68,9 +92,11 @@ class GitHubRepoUtils:
                     matched_nix.add(n_dep)
                     matched_py.add(p_dep)
                     continue
-                
+
                 # 2. Fuzzy match for typos or naming conventions (python-magic vs magic)
-                similarity = textdistance.levenshtein.normalized_similarity(n_dep, p_dep)
+                similarity = textdistance.levenshtein.normalized_similarity(
+                    n_dep, p_dep
+                )
                 if similarity >= threshold:
                     matched_nix.add(n_dep)
                     matched_py.add(p_dep)
@@ -78,5 +104,5 @@ class GitHubRepoUtils:
         # Return items that didn't find a partner in the other set
         unmatched_nix = nix_deps - matched_nix
         unmatched_py = py_deps - matched_py
-        
+
         return unmatched_nix.union(unmatched_py)

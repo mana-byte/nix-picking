@@ -1,8 +1,10 @@
 import sys, inspect
 from nix_picking.review.review_points.base import ReviewPointBase
 
+from .check_hash_github import CheckHashGitHub
+
 # Declare all the review points in this module for easy import elsewhere
-__all__ = []
+__all__ = ["CheckHashGitHub"]
 
 def global_points() -> list[ReviewPointBase]:
     points: list[ReviewPointBase] = []
