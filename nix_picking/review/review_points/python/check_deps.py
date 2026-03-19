@@ -49,7 +49,7 @@ class CheckDeps(ReviewPointBase):
                 return False
 
         if not repo_deps:
-            print("No dependency files found in the repository.")
+            print("No dependency files found in the repository, or no dependencies found in them.")
             return False
 
         # 3. Get deps from the Nix file
@@ -94,6 +94,8 @@ class CheckDeps(ReviewPointBase):
     def _extract_nix_deps(self, file_content: dict[str, Any]) -> set[str]:
         """Safely extract Nix dependencies based on dictionary structure."""
         deps = file_content.get("dependencies", {})
+        if isinstance(deps, str):
+            return {deps}
         if isinstance(deps, dict) and "list_content" in deps:
             return set(deps["list_content"])
         return set(deps) if isinstance(deps, list) else set()

@@ -34,7 +34,7 @@ class CheckBuildSystem(ReviewPointBase):
                 return False
 
         if not toml_text:
-            print("No pyproject.toml found in the repository.")
+            print("No pyproject.toml found in the repository, or no build-system found.")
             return False
 
         # 3. Process Build Systems
@@ -62,6 +62,8 @@ class CheckBuildSystem(ReviewPointBase):
     def _get_nix_build_systems(self, file_content: dict[str, Any]) -> set[str]:
         """Extracts build-system list from parsed Nix file content."""
         bs = file_content.get("build-system", {})
+        if isinstance(bs, str):
+            return {bs}
         if isinstance(bs, dict) and "list_content" in bs:
             return set(bs["list_content"])
         return set(bs) if isinstance(bs, list) else set()

@@ -61,7 +61,6 @@ class Reviewer:
                 parsed_file["local_file.nix"] = parser.parse(
                     raw_nix_file, additional_levels=additional_parse_levels
                 )
-                print(parsed_file)
                 builder = Builders.get_builder_from_file(content)
                 if not builder:
                     print(f"Could not determine builder for {filename}, skipping.")
@@ -80,8 +79,7 @@ class Reviewer:
 
 if __name__ == "__main__":
     reviewer = Reviewer(pr=500483)
-    with open("tests/inputs/python/a2a-sdk/default.nix") as f:
+    with open("tests/inputs/python/acres/default.nix") as f:
         file = f.read()
     reviewer.review_file(file)
-
     # reviewer.review()

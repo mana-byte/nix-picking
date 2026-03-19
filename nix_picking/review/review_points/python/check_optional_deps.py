@@ -13,7 +13,7 @@ class CheckOptionalDeps(ReviewPointBase):
     def __init__(self):
         super().__init__()
         self._importance = 5
-        self._explanation = "Check if the Nix dependencies match the repository's pyproject.toml or requirements.txt."
+        self._explanation = "Check if the Nix optional dependencies match the repository's pyproject.toml."
         self._source = (
             "https://nixos.org/manual/nixpkgs/stable/#buildpythonpackage-function"
         )
@@ -44,7 +44,7 @@ class CheckOptionalDeps(ReviewPointBase):
                 return False
 
         if not repo_deps:
-            print("No dependency files found in the repository.")
+            print("No pyproject.toml found in the repository, or no optional dependencies found in it.")
             return False
 
         # 3. Get deps from the Nix file

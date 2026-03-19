@@ -6,7 +6,7 @@ __all__ = []
 
 def global_points() -> list[ReviewPointBase]:
     points: list[ReviewPointBase] = []
-    for name, obj in inspect.getmembers(sys.modules[__name__]):
+    for _, obj in inspect.getmembers(sys.modules[__name__]):
         if (
             inspect.isclass(obj)
             and issubclass(obj, ReviewPointBase)
