@@ -1,4 +1,5 @@
 from typing import final, override, Any
+import re
 from nix_manipulator.parser import parse_to_ast
 import toml
 from github import GithubException
@@ -23,11 +24,12 @@ class checkDeps(ReviewPointBase):
     @override
     def apply(self, file_content: dict[str, Any]) -> bool:
         owner, repo, tag = None, None, None
+
+        # Determine repo
         try:
             if file_content["src"]["function"] == "fetchFromGitHub":
                 owner = file_content["src"]["owner"]
                 repo = file_content["src"]["repo"]
-                tag = file_content["src"]["tag"]
             elif "github" in file_content["meta"]["homepage"].split("/"):
                 github_url = file_content["meta"]["homepage"]
                 parts = github_url.split("/")
@@ -42,14 +44,38 @@ class checkDeps(ReviewPointBase):
         except KeyError:
             return False
 
+        # Get and parse deps file from the repo
         deps_files = self.__get_python_deps_files(owner, repo)
+        deps: set[str] = set()
         if not deps_files:
             print("No requirements.txt or pyproject.toml file found in the repository.")
         if "pyproject.toml" in deps_files:
             pyproject: dict[str, Any] = toml.loads(deps_files["pyproject.toml"])
-            print(pyproject["project"]["dependencies"])
+            try:
+                for dependency_str in pyproject["project"]["dependencies"]:
+                    dependency = re.split(r'[>=<~!,;]', dependency_str)[0].strip()
+                    deps.add(dependency)
+            except KeyError:
+                print("No dependencies found in pyproject.toml file.")
         if "requirements.txt" in deps_files:
             requirements = deps_files["requirements.txt"].splitlines()
+            deps = deps.union(set(requirements))
+
+        # Get deps from the Nix file
+        try:
+            nix_file_deps = set(file_content["dependencies"])
+        except KeyError:
+            print("No dependencies found in the Nix file.")
+            nix_file_deps = set()
+
+        # Compare
+        if deps != nix_file_deps:
+            print(
+                "CAUTION: The dependencies in the Nix file do not match the dependencies found in the repository."
+            )
+            print(f"Dependencies in the repository: {deps}")
+            print(f"Dependencies in the Nix file: {nix_file_deps}")
+            return False
 
         return True
 
@@ -76,7 +102,6 @@ class checkDeps(ReviewPointBase):
 
 
 if __name__ == "__main__":
-    import json
     from nix_picking.parser import NixParser
 
     rev = checkDeps()
