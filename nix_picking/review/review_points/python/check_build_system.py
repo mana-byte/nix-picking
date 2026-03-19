@@ -8,12 +8,12 @@ from nix_picking.review.services.github import GitHubService
 
 
 @final
-class CheckDeps(ReviewPointBase):
+class CheckBuildSystem(ReviewPointBase):
     @override
     def __init__(self):
         super().__init__()
         self._importance = 5
-        self._explanation = "Check if the project has a requirements.txt or pyproject.toml file to manage dependencies."
+        self._explanation = "Check build-system in pyproject.toml"
         self._source = (
             "https://nixos.org/manual/nixpkgs/stable/#buildpythonpackage-function"
         )
@@ -48,52 +48,41 @@ class CheckDeps(ReviewPointBase):
             deps_files = self.__get_python_deps_files(owner, repo, sha=sha)
         else:
             deps_files = self.__get_python_deps_files(owner, repo)
-        deps: set[str] = set()
+        build_systems: set[str] = set()
         if not deps_files:
-            print("No requirements.txt or pyproject.toml file found in the repository.")
+            print("No pyproject.toml file found in the repository.")
             return False
-        if "pyproject.toml" in deps_files:
-            pyproject: dict[str, Any] = toml.loads(deps_files["pyproject.toml"])
-            try:
-                for dependency_str in pyproject["project"]["dependencies"]:
-                    dependency = re.split(r"[>=<~!,;]", dependency_str)[0].strip()
-                    deps.add(dependency)
-            except KeyError:
-                print("No dependencies found in pyproject.toml file.")
-                return False
-        if "requirements.txt" in deps_files:
-            requirements = deps_files["requirements.txt"].splitlines()
-            deps = deps.union(set(requirements))
+        pyproject: dict[str, Any] = toml.loads(deps_files["pyproject.toml"])
+        try:
+            build_systems = set(pyproject["build-system"]["requires"])
+        except KeyError:
+            print("No build-system found in pyproject.toml file.")
+            return False
 
         # Get deps from the Nix file
         try:
-            if (
-                "dependencies" in file_content
-                and "list_content" in file_content["dependencies"]
-            ):
-                nix_file_deps = set(file_content["dependencies"]["list_content"])
+            if "build-system" in file_content and "list_content" in file_content["build-system"]:
+                nix_file_deps = set(file_content["build-system"]["list_content"])
             else:
-                nix_file_deps = set(file_content["dependencies"])
+                nix_file_deps = set(file_content["build-system"])
         except KeyError:
-            print("No dependencies found in the Nix file.")
+            print("No build-system found in the Nix file.")
             nix_file_deps = set()
 
         # Compare
-        if deps != nix_file_deps:
-            diff = deps.symmetric_difference(nix_file_deps)
+        if build_systems != nix_file_deps:
+            diff = build_systems.symmetric_difference(nix_file_deps)
             print(
-                "CAUTION: The dependencies in the Nix file do not match the dependencies found in the repository."
+                "CAUTION: The build-system in the Nix file do not match the build-system found in the repository."
             )
-            print(f"Dependencies in the repository: {deps}")
-            print(f"Dependencies in the Nix file: {nix_file_deps}")
+            print(f"build-system in the repository: {build_systems}")
+            print(f"build-system in the Nix file: {nix_file_deps}")
             print(f"Diff: {diff}")
             return False
 
         return True
 
-    def __get_python_deps_files(
-        self, owner: str, repo: str, sha: str = ""
-    ) -> dict[str, str]:
+    def __get_python_deps_files(self, owner: str, repo: str, sha: str = "") -> dict[str, str]:
         """Check if the repository has a pyproject.toml file."""
         github_service = GitHubService()
         deps_files = {"pyproject.toml"}
@@ -106,15 +95,13 @@ class CheckDeps(ReviewPointBase):
                         # Pass the SHA as the 'ref' argument so we get the file at that specific commit
                         kwargs = {"ref": sha} if sha else {}
                         content = repository.get_contents(deps_file, **kwargs)
-
+                        
                         # PyGithub can return a list if the path is a directory, ensure it's a single file
                         if isinstance(content, list):
                             content = content[0]
-
+                            
                         files[deps_file] = content.decoded_content.decode("utf-8")
-                        print(
-                            f"Found {deps_file} in the repository (ref: {sha or 'default branch'})."
-                        )
+                        print(f"Found {deps_file} in the repository (ref: {sha or 'default branch'}).")
                     except GithubException:
                         continue
             except GithubException:
@@ -129,25 +116,23 @@ class CheckDeps(ReviewPointBase):
         with github_service.get_github_client() as g:
             try:
                 repository = g.get_repo(f"{owner}/{repo}")
-
+                
                 if version:
                     # Create a set of possible tag names to check against
                     target_tags = {version, f"v{version}"}
-
+                    
                     # Iterate through the repository's tags
                     tags = repository.get_tags()
                     for tag in tags:
                         if tag.name in target_tags:
                             print(f"Matched tag '{tag.name}' to version '{version}'.")
                             return tag.commit.sha
-
-                    print(
-                        f"Warning: Could not find tag matching '{version}' or 'v{version}'. Falling back to default branch."
-                    )
-
+                            
+                    print(f"Warning: Could not find tag matching '{version}' or 'v{version}'. Falling back to default branch.")
+                
                 # Fallback: get the latest commit on the default branch if no version matches or is provided
                 return repository.get_commits()[0].sha
-
+                
             except GithubException:
                 print("Repository not found or access denied.")
             except Exception as e:

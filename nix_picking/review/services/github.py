@@ -16,6 +16,7 @@ BLACK_LISTED_FILES = {
     "pkgs/by-name/hy/hyprland/info.json",
 }
 
+
 @final
 class GitHubService:
 
@@ -31,3 +32,25 @@ class GitHubService:
         auth = Auth.Token(GITHUB_ACCESS_TOKEN)
         with Github(auth=auth) as g:
             yield g
+
+    def fetch_pull_request_files(
+        self, pr_number: int, repo_full_name: str
+    ) -> dict[str, str]:
+        pr_file_contents: dict[str, str] = {}
+        try:
+            with self.get_github_client() as g:
+                repo: Repository = g.get_repo(repo_full_name)
+                pr: PullRequest = repo.get_pull(pr_number)
+                files = pr.get_files()
+                for file in files:
+                    if file.filename in BLACK_LISTED_FILES:
+                        continue
+                    files_content = repo.get_contents(file.filename, ref=pr.head.sha)
+                    pr_file_contents[file.filename] = files_content.decoded_content.decode("utf-8")
+                return pr_file_contents
+        except UnknownObjectException as e:
+            raise ValueError(
+                f"Pull request #{pr_number} not found in repository {repo_full_name}"
+            )
+        except GithubException as e:
+            raise ValueError(f"GitHub API error: {e.data.get('message', str(e))}")

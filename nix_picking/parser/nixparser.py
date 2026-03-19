@@ -7,6 +7,8 @@ from .enums.builders import Builders
 class NixParser:
     """
     A simple parser for simple nix expressions and simple minds.
+    Doesn't parse perfectly but is good enough for intended use cases.
+    It is not meant to be a full fledged nix parser, but rather a tool to extract the arguments of the builder function.
     """
 
     OPENING_CHARS: set[str] = {"{", "[", "("}
@@ -167,7 +169,7 @@ class NixParser:
 
 if __name__ == "__main__":
     parser = NixParser()
-    with open("tests/inputs/random/kbs2/package.nix", "r") as f:
+    with open("tests/inputs/python/agent-py/default.nix", "r") as f:
         nix_expression = f.read()
-    parsed_args = parser.parse(nix_expression, additional_levels=2)
+    parsed_args = parser.parse(nix_expression, additional_levels=3)
     print(json.dumps(parsed_args, indent=2))

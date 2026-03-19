@@ -1,12 +1,10 @@
 from abc import abstractmethod
 from typing import Any
-from .enums import Topics
 
 
 class ReviewPointBase:
     def __init__(self):
         self._name: str = self.__class__.__name__
-        self._topic: Topics | None = None
         self._importance: int | None = None
         self._explanation: str | None = None
         self._source: str | None = "No source"
@@ -21,12 +19,6 @@ class ReviewPointBase:
         if not self._name:
             raise ValueError("Name cannot be empty")
         return self._name
-
-    @property
-    def topic(self) -> Topics:
-        if not self._topic:
-            raise ValueError("Topic cannot be empty")
-        return self._topic
 
     @property
     def importance(self) -> int:
