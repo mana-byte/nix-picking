@@ -19,8 +19,6 @@ class Reviewer:
             if not self.owner or not self.repo:
                 raise ValueError(f"Invalid fork format: {fork}")
 
-        self.files: dict[str, str] | None = None
-
     def _go_through_files(
         self,
         files: dict[str, str],
@@ -60,11 +58,11 @@ class Reviewer:
                 "No PR number provided, skipping review. If you want to review a local file use review_file() instead."
             )
             return
-        self.files = self.github_service.fetch_pull_request_files(
+        files = self.github_service.fetch_pull_request_files(
             pr_number=self.pr, repo_full_name=f"{self.owner}/{self.repo}"
         )
         self._go_through_files(
-            self.files,
+            files,
             withGlobal=withGlobal,
             additional_parse_levels=additional_parse_levels,
         )
