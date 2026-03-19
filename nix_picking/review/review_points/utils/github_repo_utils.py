@@ -62,6 +62,7 @@ class GitHubRepoUtils:
 
         for n_dep in nix_deps:
             for p_dep in py_deps:
+
                 # 1. Direct match or "extra" match (markitdown[pdf] contains markitdown)
                 if n_dep == p_dep or n_dep in p_dep or p_dep in n_dep:
                     matched_nix.add(n_dep)

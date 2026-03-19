@@ -1,8 +1,7 @@
-from typing import Any
-
-from nix_picking.review.review_points.base import ReviewPointBase
 import sys, inspect
+from nix_picking.review.review_points.base import ReviewPointBase
 
+# Declare all the review points in this module for easy import elsewhere
 __all__ = []
 
 def global_points() -> list[ReviewPointBase]:

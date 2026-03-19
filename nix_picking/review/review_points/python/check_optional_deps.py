@@ -8,7 +8,7 @@ from nix_picking.review.review_points.utils import GitHubRepoUtils
 
 
 @final
-class CheckDeps(ReviewPointBase):
+class CheckOptionalDeps(ReviewPointBase):
     @override
     def __init__(self):
         super().__init__()
@@ -38,11 +38,6 @@ class CheckDeps(ReviewPointBase):
                 pyproject_str = GitHubRepoUtils.get_file_content(repository, "pyproject.toml", sha)
                 if pyproject_str:
                     repo_deps.update(self._parse_pyproject_deps(pyproject_str))
-                
-                # Check requirements.txt (if it exists, merge them)
-                reqs_str = GitHubRepoUtils.get_file_content(repository, "requirements.txt", sha)
-                if reqs_str:
-                    repo_deps.update(self._parse_requirements_txt(reqs_str))
                     
             except Exception as e:
                 print(f"GitHub Error: {e}")
@@ -61,7 +56,7 @@ class CheckDeps(ReviewPointBase):
         # 4. Compare
         diff = GitHubRepoUtils.fuzzy_diff(repo_deps, nix_file_deps)
         if diff:
-            print("WARNING: Dependencies in the Nix file do not match the repository.")
+            print("WARNING: optional dependencies in the Nix file do not match the repository.")
             print(f"Repository: {repo_deps}")
             print(f"Nix file: {nix_file_deps}")
             print(f"Diff: {diff}")
@@ -73,27 +68,28 @@ class CheckDeps(ReviewPointBase):
         """Parses [project.dependencies] from pyproject.toml."""
         try:
             data = toml.loads(content)
-            deps_list = data.get("project", {}).get("dependencies", [])
-            return {re.split(r"[>=<~!,;]", d.lower())[0].strip() for d in deps_list}
-        except Exception:
+            deps_group_list = data.get("project", {}).get("optional-dependencies", {})
+            opt_deps = set()
+            for group_name, group_deps in deps_group_list.items():
+                if group_name == "all":
+                    continue
+                if isinstance(group_deps, list):
+                    opt_deps.update({re.split(r'[>=<~!,;]', dep.lower())[0].strip() for dep in group_deps})
+            return opt_deps
+        except Exception as e:
             return set()
-
-    def _parse_requirements_txt(self, content: str) -> set[str]:
-        """Parses requirements.txt, stripping versions and comments."""
-        deps = set()
-        for line in content.splitlines():
-            line = line.strip()
-            if not line or line.startswith("#") or line.startswith("-r"):
-                continue
-            # Strip version specifiers and comments on the same line
-            clean_name = re.split(r"[>=<~!,; #]", line.lower())[0].strip()
-            if clean_name:
-                deps.add(clean_name)
-        return deps
 
     def _extract_nix_deps(self, file_content: dict[str, Any]) -> set[str]:
         """Safely extract Nix dependencies based on dictionary structure."""
-        deps = file_content.get("dependencies", {})
+        deps = file_content.get("optional-dependencies", {})
+        output_opt_deps = set()
         if isinstance(deps, dict) and "list_content" in deps:
-            return set(deps["list_content"])
-        return set(deps) if isinstance(deps, list) else set()
+            for group_name, group_deps in deps["list_content"].items():
+                if isinstance(group_deps, list):
+                    output_opt_deps.update(set(group_deps))
+        else:
+            for group_name, group_deps in deps.items():
+                if isinstance(group_deps, list):
+                    output_opt_deps.update(set(group_deps))
+        return output_opt_deps
+        

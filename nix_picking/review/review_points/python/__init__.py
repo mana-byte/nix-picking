@@ -1,17 +1,17 @@
-from typing import Any
 import sys, inspect
 
 from nix_picking.review.review_points.base import ReviewPointBase
 
 from .check_deps import CheckDeps
 from .check_build_system import CheckBuildSystem
+from .check_optional_deps import CheckOptionalDeps
 
-__all__ = ["CheckDeps", "CheckBuildSystem"]
-
+# Declare all the review points in this module for easy import elsewhere
+__all__ = ["CheckDeps", "CheckBuildSystem", "CheckOptionalDeps"]
 
 def python_points() -> list[ReviewPointBase]:
     points: list[ReviewPointBase] = []
-    for name, obj in inspect.getmembers(sys.modules[__name__]):
+    for _, obj in inspect.getmembers(sys.modules[__name__]):
         if (
             inspect.isclass(obj)
             and issubclass(obj, ReviewPointBase)

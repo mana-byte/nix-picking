@@ -55,7 +55,7 @@ class CheckBuildSystem(ReviewPointBase):
             data = toml.loads(content)
             requires = data.get("build-system", {}).get("requires", [])
             # Convert 'setuptools >= 61.0' -> 'setuptools'
-            return {re.split(r'[>=<~!,;]', req)[0].strip() for req in requires}
+            return {re.split(r'[>=<~!,;]', req.lower())[0].strip() for req in requires}
         except Exception:
             return set()
 
