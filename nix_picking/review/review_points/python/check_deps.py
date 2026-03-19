@@ -54,6 +54,9 @@ class CheckDeps(ReviewPointBase):
 
         # 3. Get deps from the Nix file
         nix_file_deps = self._extract_nix_deps(file_content)
+        if not nix_file_deps:
+            print("No dependencies found in the Nix file.")
+            return False
 
         # 4. Compare
         diff = GitHubRepoUtils.fuzzy_diff(repo_deps, nix_file_deps)

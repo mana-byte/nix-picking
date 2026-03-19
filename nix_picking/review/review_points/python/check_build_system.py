@@ -34,6 +34,7 @@ class CheckBuildSystem(ReviewPointBase):
                 return False
 
         if not toml_text:
+            print("No pyproject.toml found in the repository.")
             return False
 
         # 3. Process Build Systems

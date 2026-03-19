@@ -56,7 +56,6 @@ class GitHubRepoUtils:
     def fuzzy_diff(nix_deps: set[str], py_deps: set[str], threshold: float = 0.8) -> set[str]:
         """
         Returns a symmetric difference, but ignores items that are 'close enough'.
-        A threshold of 0.8 to 0.9 is usually the sweet spot for package names.
         """
         matched_nix = set()
         matched_py = set()

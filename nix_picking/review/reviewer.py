@@ -3,7 +3,6 @@ from typing import Any, final
 
 from nix_picking.parser import NixParser
 from nix_picking.parser.enums.builders import Builders
-from nix_picking.review.review_points.base import ReviewPointBase
 from nix_picking.review.services.github import GitHubService
 from nix_picking.review.review_points.enums import Topics
 
@@ -42,13 +41,13 @@ class Reviewer:
                     print(f"\n {point.name}: ")
                     if point.apply(self.parsed_files[filename]):
                         print("PASSED")
-                print("\n")
+                    print("\n")
 
             except ValueError:
                 print(f"Failed to parse {filename}, skipping.")
                 continue
 
 if __name__ == "__main__":
-    reviewer = Reviewer(pr=501295)
+    reviewer = Reviewer(pr=500483)
     reviewer.review()
 
