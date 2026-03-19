@@ -1,6 +1,8 @@
 from typing import final, override, Any
-
+from nix_manipulator.parser import parse_to_ast
+import toml
 from github import GithubException
+
 from nix_picking.review.review_points.enums import Topics
 from nix_picking.review.review_points.base import ReviewPointBase
 from nix_picking.review.services.github import GitHubService
@@ -40,9 +42,14 @@ class checkDeps(ReviewPointBase):
         except KeyError:
             return False
 
-        files = self.__get_python_deps_files(owner, repo)
-        print(files)
-        # here
+        deps_files = self.__get_python_deps_files(owner, repo)
+        if not deps_files:
+            print("No requirements.txt or pyproject.toml file found in the repository.")
+        if "pyproject.toml" in deps_files:
+            pyproject: dict[str, Any] = toml.loads(deps_files["pyproject.toml"])
+            print(pyproject["project"]["dependencies"])
+        if "requirements.txt" in deps_files:
+            requirements = deps_files["requirements.txt"].splitlines()
 
         return True
 
@@ -70,8 +77,11 @@ class checkDeps(ReviewPointBase):
 
 if __name__ == "__main__":
     import json
+    from nix_picking.parser import NixParser
 
     rev = checkDeps()
-    with open("tests/outputs/python/a2a-sdk/default.json") as f:
-        file_content = json.load(f)
-        rev.apply(file_content)
+    with open("tests/inputs/python/a2a-sdk/default.nix") as f:
+        file_content = f.read()
+    parser = NixParser()
+    parsed_file = parser.parse(file_content, additional_levels=2)
+    rev.apply(parsed_file)
