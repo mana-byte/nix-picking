@@ -5,10 +5,10 @@ from nix_picking.review.review_points.models import ReviewPointBase
 from nix_picking.review.review_points.models.languages import *
 
 # The language modules need to be imported here to ensure the language is registered
-import nix_picking.review.review_points.global_
-import nix_picking.review.review_points.python
-import nix_picking.review.review_points.go
-import nix_picking.review.review_points.rust
+import nix_picking.review.review_points.languages.global_
+import nix_picking.review.review_points.languages.python
+import nix_picking.review.review_points.languages.go
+import nix_picking.review.review_points.languages.rust
 
 
 class Topics(Enum):
