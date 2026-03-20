@@ -76,6 +76,5 @@ def review_file(
         )
     ReviewPrintRepo.print_review_report(result, console, verbose=verbose)
 
-
 if __name__ == "__main__":
     cli()

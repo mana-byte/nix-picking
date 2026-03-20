@@ -55,7 +55,7 @@ class ReviewPrintRepo:
                 if verbose:
                     review_table.add_row(
                         report["review_point"],
-                        "✅" if report["passed"] else "❌",
+                        "[green]True" if report["passed"] else "[bold bright_red]False",
                         (
                             report["stdout"].strip()
                             if isinstance(report["stdout"], str)
@@ -66,7 +66,7 @@ class ReviewPrintRepo:
                 else:
                     review_table.add_row(
                         report["review_point"],
-                        "✅" if report["passed"] else "❌",
+                        "[green]True" if report["passed"] else "[bold bright_red]False",
                         JSON.from_data(report["output"]) if report["output"] else "",
                     )
             console.print(review_table)

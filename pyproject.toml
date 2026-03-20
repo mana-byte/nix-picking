@@ -13,6 +13,9 @@ dependencies = [
     "toml>=0.10.2",
 ]
 
+[project.scripts]
+nix-pick = "nix_picking.cli.entrypoint:cli"
+
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
