@@ -4,7 +4,7 @@ from typing import Any, final
 from nix_picking.parser import NixParser
 from nix_picking.parser.enums.builders import Builders
 from nix_picking.review.review_points.enums import Topics
-from nix_picking.review.review_points.utils import GitHubRepoUtils
+from nix_picking.review.repositories import GitHubRepoUtils
 
 
 @final

@@ -3,7 +3,7 @@ import json
 import subprocess
 
 from nix_picking.review.review_points.base import ReviewPointBase
-from nix_picking.review.review_points.utils import GitHubRepoUtils
+from nix_picking.review.repositories import GitHubRepoUtils
 
 
 @final
