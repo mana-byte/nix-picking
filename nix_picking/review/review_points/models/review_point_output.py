@@ -2,11 +2,13 @@ from dataclasses import dataclass
 from typing import Any
 import json
 
+from nix_picking.review.review_points.enums.review_point_status import ReviewPointStatus
+
 
 @dataclass
 class ReviewPointOutput:
     review_point: str
-    passed: bool
+    status: ReviewPointStatus
     stdrout: str
     output: list[str] | set[str] | dict[str, str] | None
 
@@ -16,7 +18,7 @@ class ReviewPointOutput:
             output = list(self.output)
         return {
             "review_point": self.review_point,
-            "passed": self.passed,
+            "status": self.status,
             "stdout": self.stdrout,
             "output": output,
         }

@@ -2,15 +2,13 @@ from typing import Any, final, override
 import json
 import subprocess
 
-from nix_picking.review.review_points.models import ReviewPointBase
 from nix_picking.review.repositories import GitHubRepoUtils
-from nix_picking.review.review_points.models.review_point_output import (
-    ReviewPointOutput,
-)
+from nix_picking.review.review_points.models.languages import GlobalReviewPoint
+from nix_picking.review.review_points.models.review_point_output import ReviewPointOutput
 
 
 @final
-class CheckHashGitHub(ReviewPointBase):
+class CheckHashGitHub(GlobalReviewPoint):
 
     @override
     def __init__(self):
@@ -29,21 +27,17 @@ class CheckHashGitHub(ReviewPointBase):
 
         hash = file_content.get("src", {}).get("hash", "")
         if not hash:
-            self.to_stdrout("No hash found in the fetchFromGitHub function.")
-            return self.fail()
+            return self.skip(message="No hash found in the fetchFromGitHub function.")
 
         tag = GitHubRepoUtils.get_tag_from_version(f"{owner}/{repo}", ver)
         if not tag:
-            self.to_stdrout(
-                f"Could not find a matching tag for version '{ver}' in the repository."
-            )
-            return self.fail()
+            return self.skip(message=f"Could not find a matching tag for version '{ver}' in the repository.")
 
         expected_hash = self._get_nix_git_hash(f"{owner}/{repo}", tag)
 
         if expected_hash != hash:
             self.to_stdrout(
-                """
+                f"""
             WARNING: Hash mismatch for {owner}/{repo} at tag '{tag}':
               Expected: {expected_hash}
               Found:    {hash}

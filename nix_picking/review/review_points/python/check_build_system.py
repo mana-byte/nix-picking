@@ -2,18 +2,21 @@ import re
 import toml
 from typing import final, override, Any
 
-from nix_picking.review.review_points.models import ReviewPointBase
+from nix_picking.review.review_points.models.languages import PythonReviewPoint
 from nix_picking.review.repositories import GitHubRepoUtils
-from nix_picking.review.review_points.models.review_point_output import ReviewPointOutput
+from nix_picking.review.review_points.models import ReviewPointOutput
+
 
 @final
-class CheckBuildSystem(ReviewPointBase):
+class CheckBuildSystem(PythonReviewPoint):
     @override
     def __init__(self):
         super().__init__()
         self._importance = 5
         self._explanation = "Check build-system in pyproject.toml"
-        self._source = "https://nixos.org/manual/nixpkgs/stable/#buildpythonpackage-function"
+        self._source = (
+            "https://nixos.org/manual/nixpkgs/stable/#buildpythonpackage-function"
+        )
 
     @override
     def apply(self, file_content: dict[str, Any]) -> ReviewPointOutput:
@@ -28,8 +31,9 @@ class CheckBuildSystem(ReviewPointBase):
         toml_text = GitHubRepoUtils.get_file_content(repository, "pyproject.toml", sha)
 
         if not toml_text:
-            self.to_stdrout("No pyproject.toml found in the repository, or no build-system found.")
-            return self.fail()
+            return self.skip(
+                message="No pyproject.toml found in the repository, or no build-system found."
+            )
 
         # 3. Process Build Systems
         repo_build_systems = self._parse_pyproject_build_system(toml_text)
@@ -51,7 +55,7 @@ class CheckBuildSystem(ReviewPointBase):
             data = toml.loads(content)
             requires = data.get("build-system", {}).get("requires", [])
             # Convert 'setuptools >= 61.0' -> 'setuptools'
-            return {re.split(r'[>=<~!,;]', req.lower())[0].strip() for req in requires}
+            return {re.split(r"[>=<~!,;]", req.lower())[0].strip() for req in requires}
         except Exception:
             return set()
 

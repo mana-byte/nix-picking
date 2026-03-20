@@ -5,6 +5,7 @@ from nix_picking.parser import NixParser
 from nix_picking.parser.enums.builders import Builders
 from nix_picking.review.review_points.enums import Topics
 from nix_picking.review.repositories import GitHubRepoUtils
+from nix_picking.review.review_points.models import ReviewPointBase
 
 
 @final
@@ -45,11 +46,15 @@ class Reviewer:
                     print(f"Could not determine builder for {filename}, skipping.")
                     continue
                 topic = Topics.get_topic_from_builder(builder)
-                points = Topics.get_points_by_topic(topic)
+                point_classes = Topics.get_point_classes_by_topic(topic)
                 if withGlobal:
-                    global_points = Topics.get_points_by_topic(Topics.GLOBAL)
-                    points.extend(global_points)
-                for point in points:
+                    global_point_classes = Topics.get_point_classes_by_topic(
+                        Topics.GLOBAL
+                    )
+                    point_classes.update(global_point_classes)
+                for ReviewPointClass in point_classes:
+                    # WARNING: LSP might not recognize this as a class but it is one.
+                    point = ReviewPointClass()
                     report = point.apply(parsed_files[filename])
                     self.report[filename].append(report.to_dict())
 
@@ -91,8 +96,19 @@ class Reviewer:
 
 
 if __name__ == "__main__":
-    reviewer = Reviewer(pr=500483)
-    with open("tests/inputs/python/a2a-sdk/default.nix") as f:
-        file = f.read()
-    print(reviewer.review_file(file))
-    # reviewer.review()
+    # Source - https://stackoverflow.com/a/5883218
+    # Posted by Duncan, modified by community. See post 'Timeline' for change history
+    # Retrieved 2026-03-20, License - CC BY-SA 3.0
+
+    def inheritors(klass):
+        subclasses = set()
+        work = [klass]
+        while work:
+            parent = work.pop()
+            for child in parent.__subclasses__():
+                if child not in subclasses:
+                    subclasses.add(child)
+                    work.append(child)
+        return subclasses
+
+    print(inheritors(ReviewPointBase))

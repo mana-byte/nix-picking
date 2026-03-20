@@ -1,5 +1,7 @@
 from typing import Any
 
+from nix_picking.review.review_points.enums.review_point_status import ReviewPointStatus
+
 from .review_point_output import ReviewPointOutput
 
 
@@ -10,7 +12,10 @@ class ReviewPointBase:
         self._explanation: str | None = None
         self._source: str | None = "No source"
         self.output: ReviewPointOutput = ReviewPointOutput(
-            review_point=self.name, passed=False, stdrout="", output=[]
+            review_point=self.name,
+            status=ReviewPointStatus.FAILED,
+            stdrout="",
+            output=[],
         )
         _ = self.apply({})
 
@@ -22,17 +27,31 @@ class ReviewPointBase:
         self.output.stdrout += input_str
 
     def fail(
-        self, output: list[str] | set[str] | dict[str, str] | None = None, message: str = ""
+        self,
+        output: list[str] | set[str] | dict[str, str] | None = None,
+        message: str = "",
     ) -> ReviewPointOutput:
-        self.output.passed = False
+        self.output.status = ReviewPointStatus.FAILED
+        self.output.output = output
+        self.to_stdrout(message)
+        return self.output
+
+    def skip(
+        self,
+        output: list[str] | set[str] | dict[str, str] | None = None,
+        message: str = "",
+    ) -> ReviewPointOutput:
+        self.output.status = ReviewPointStatus.SKIPPED
         self.output.output = output
         self.to_stdrout(message)
         return self.output
 
     def pass_(
-        self, output: list[str] | set[str] | dict[str, str] | None = None, message: str = ""
+        self,
+        output: list[str] | set[str] | dict[str, str] | None = None,
+        message: str = "",
     ) -> ReviewPointOutput:
-        self.output.passed = True
+        self.output.status = ReviewPointStatus.PASSED
         self.output.output = output
         self.to_stdrout(message)
         return self.output
@@ -62,3 +81,24 @@ class ReviewPointBase:
         if not self._source:
             raise ValueError("Source cannot be empty")
         return self._source
+
+    @classmethod
+    def inheritors(cls, include_self: bool = False) -> "set[ReviewPointBase]":
+        """
+        Returns a set of all subclasses of this class.
+        Args:
+            include_self: If True, includes the class itself in the result.
+                          Defaults to False.
+        Returns:
+            set[type]: A set of all subclasses (and optionally the class itself).
+        """
+        subclasses = set()
+        if include_self:
+            subclasses.add(cls)
+        work = list(cls.__subclasses__())
+        while work:
+            parent = work.pop()
+            if parent not in subclasses:
+                subclasses.add(parent)
+                work.extend(parent.__subclasses__())
+        return subclasses

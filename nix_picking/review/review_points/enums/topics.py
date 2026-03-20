@@ -1,10 +1,14 @@
 from enum import Enum
-from typing import Any
 
 from nix_picking.parser.enums.builders import Builders
 from nix_picking.review.review_points.models import ReviewPointBase
-from nix_picking.review.review_points.python import python_points
-from nix_picking.review.review_points.global_ import global_points
+from nix_picking.review.review_points.models.languages import *
+
+# The language modules need to be imported here to ensure the language is registered
+import nix_picking.review.review_points.global_
+import nix_picking.review.review_points.python
+import nix_picking.review.review_points.go
+import nix_picking.review.review_points.rust
 
 
 class Topics(Enum):
@@ -27,9 +31,14 @@ class Topics(Enum):
         return mapping.get(builder, cls.GLOBAL)
 
     @classmethod
-    def get_points_by_topic(cls, topic: "Topics") -> list[ReviewPointBase]:
+    def get_point_classes_by_topic(cls, topic: "Topics") -> set[ReviewPointBase]:
+        """
+        Maps each language topic to its corresponding review point classes.
+        """
         mapping = {
-            cls.PYTHON: python_points(),
-            cls.GLOBAL: global_points(),
+            cls.PYTHON: PythonReviewPoint.inheritors(),
+            cls.GLOBAL: GlobalReviewPoint.inheritors(),
+            cls.GO: GoReviewPoint.inheritors(),
+            cls.RUST: RustReviewPoint.inheritors(),
         }
-        return mapping.get(topic, [])
+        return mapping.get(topic, set())

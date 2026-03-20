@@ -2,15 +2,13 @@ import re
 import toml
 from typing import final, override, Any
 
-from nix_picking.review.review_points.models import ReviewPointBase
 from nix_picking.review.repositories import GitHubRepoUtils
-from nix_picking.review.review_points.models.review_point_output import (
-    ReviewPointOutput,
-)
+from nix_picking.review.review_points.models import ReviewPointOutput
+from nix_picking.review.review_points.models.languages import PythonReviewPoint
 
 
 @final
-class CheckOptionalDeps(ReviewPointBase):
+class CheckOptionalDeps(PythonReviewPoint):
     @override
     def __init__(self):
         super().__init__()
@@ -41,18 +39,12 @@ class CheckOptionalDeps(ReviewPointBase):
             repo_deps.update(self._parse_pyproject_opt_deps(pyproject_str))
 
         if not repo_deps:
-            self.to_stdrout(
-                "No pyproject.toml found in the repository, or no optional dependencies found in it."
-            )
-            return self.fail()
+            return self.skip(message="No pyproject.toml found in the repository, or no optional dependencies found in it.")
 
         # 3. Get deps from the Nix file
         nix_file_deps = self._extract_nix_opt_deps(file_content)
         if not nix_file_deps:
-            self.to_stdrout(
-                "Could not extract optional dependencies from the Nix file."
-            )
-            return self.fail()
+            return self.skip(message="Could not extract optional dependencies from the Nix file.")
 
         # 4. Compare
         diff = GitHubRepoUtils.fuzzy_diff(repo_deps, nix_file_deps)
