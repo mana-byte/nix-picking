@@ -4,6 +4,9 @@ from typing import final, override, Any
 
 from nix_picking.review.review_points.models import ReviewPointBase
 from nix_picking.review.repositories import GitHubRepoUtils
+from nix_picking.review.review_points.models.review_point_output import (
+    ReviewPointOutput,
+)
 
 
 @final
@@ -18,11 +21,12 @@ class CheckDeps(ReviewPointBase):
         )
 
     @override
-    def apply(self, file_content: dict[str, Any]) -> bool:
+    def apply(self, file_content: dict[str, Any]) -> ReviewPointOutput:
         # 1. Identify Repo
         owner, repo, version = GitHubRepoUtils.extract_repo_info(file_content)
         if not (owner and repo):
-            return False
+            self.to_stdrout("Could not identify GitHub repository from the Nix file.")
+            return self.fail()
 
         # 2. Fetch Remote Data
         repo_deps: set[str] = set()
@@ -43,27 +47,31 @@ class CheckDeps(ReviewPointBase):
             repo_deps.update(self._parse_requirements_txt(reqs_str))
 
         if not repo_deps:
-            print(
-                "No dependency files found in the repository, or no dependencies found in them."
+            self.to_stdrout(
+                "No dependencies found in the repository's pyproject.toml or requirements.txt."
             )
-            return False
+            return self.fail()
 
         # 3. Get deps from the Nix file
         nix_file_deps = self._extract_nix_deps(file_content)
         if not nix_file_deps:
-            print("No dependencies found in the Nix file.")
-            return False
+            self.to_stdrout("Could not extract dependencies from the Nix file.")
+            return self.fail()
 
         # 4. Compare
         diff = GitHubRepoUtils.fuzzy_diff(repo_deps, nix_file_deps)
         if diff:
-            print("WARNING: Dependencies in the Nix file do not match the repository.")
-            print(f"Repository: {repo_deps}")
-            print(f"Nix file: {nix_file_deps}")
-            print(f"Diff: {diff}")
-            return False
+            self.to_stdrout(
+                f"""
+            WARNING: Dependencies in the Nix file do not match the repo.
+            Repository: {repo_deps}
+            Nix file: {nix_file_deps}
+            Diff: {diff}
+            """
+            )
+            return self.fail(diff)
 
-        return True
+        return self.pass_()
 
     def _parse_pyproject_deps(self, content: str) -> set[str]:
         """Parses [project.dependencies] from pyproject.toml."""

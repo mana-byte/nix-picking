@@ -49,10 +49,7 @@ class Reviewer:
                     global_points = Topics.get_points_by_topic(Topics.GLOBAL)
                     points.extend(global_points)
                 for point in points:
-                    print(f"\n {point.name}: ")
-                    if point.apply(parsed_files[filename]):
-                        print("PASSED")
-                    print("\n")
+                    print(point.apply(parsed_files[filename]).to_json())
 
             except ValueError:
                 print(f"Failed to parse {filename}, skipping.")

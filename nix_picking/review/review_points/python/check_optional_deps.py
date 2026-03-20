@@ -4,6 +4,9 @@ from typing import final, override, Any
 
 from nix_picking.review.review_points.models import ReviewPointBase
 from nix_picking.review.repositories import GitHubRepoUtils
+from nix_picking.review.review_points.models.review_point_output import (
+    ReviewPointOutput,
+)
 
 
 @final
@@ -18,11 +21,12 @@ class CheckOptionalDeps(ReviewPointBase):
         )
 
     @override
-    def apply(self, file_content: dict[str, Any]) -> bool:
+    def apply(self, file_content: dict[str, Any]) -> ReviewPointOutput:
         # 1. Identify Repo
         owner, repo, version = GitHubRepoUtils.extract_repo_info(file_content)
         if not (owner and repo):
-            return False
+            self.to_stdrout("Could not identify GitHub repository from the Nix file.")
+            return self.fail()
 
         # 2. Fetch Remote Data
         repo_deps: set[str] = set()
@@ -38,10 +42,10 @@ class CheckOptionalDeps(ReviewPointBase):
             repo_deps.update(self._parse_pyproject_opt_deps(pyproject_str))
 
         if not repo_deps:
-            print(
+            self.to_stdrout(
                 "No pyproject.toml found in the repository, or no optional dependencies found in it."
             )
-            return False
+            return self.fail()
 
         # 3. Get deps from the Nix file
         nix_file_deps = self._extract_nix_opt_deps(file_content)
@@ -52,15 +56,17 @@ class CheckOptionalDeps(ReviewPointBase):
         # 4. Compare
         diff = GitHubRepoUtils.fuzzy_diff(repo_deps, nix_file_deps)
         if diff:
-            print(
-                "WARNING: optional dependencies in the Nix file do not match the repository."
+            self.to_stdrout(
+                """
+            WARNING: optional dependencies in the Nix file do not match the repository.
+            Repository: {repo_deps}
+            Nix file: {nix_file_deps}
+            Diff: {diff}
+            """
             )
-            print(f"Repository: {repo_deps}")
-            print(f"Nix file: {nix_file_deps}")
-            print(f"Diff: {diff}")
-            return False
+            return self.fail(diff)
 
-        return True
+        return self.pass_()
 
     def _parse_pyproject_opt_deps(self, content: str) -> set[str]:
         """Parses [project.dependencies] from pyproject.toml."""

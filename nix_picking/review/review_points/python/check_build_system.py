@@ -4,6 +4,7 @@ from typing import final, override, Any
 
 from nix_picking.review.review_points.models import ReviewPointBase
 from nix_picking.review.repositories import GitHubRepoUtils
+from nix_picking.review.review_points.models.review_point_output import ReviewPointOutput
 
 @final
 class CheckBuildSystem(ReviewPointBase):
@@ -15,24 +16,21 @@ class CheckBuildSystem(ReviewPointBase):
         self._source = "https://nixos.org/manual/nixpkgs/stable/#buildpythonpackage-function"
 
     @override
-    def apply(self, file_content: dict[str, Any]) -> bool:
+    def apply(self, file_content: dict[str, Any]) -> ReviewPointOutput:
         # 1. Identity Repo
         owner, repo, version = GitHubRepoUtils.extract_repo_info(file_content)
         if not (owner and repo):
-            return False
+            self.to_stdrout("Could not identify GitHub repository from the Nix file.")
+            return self.fail()
 
         # 2. Fetch Remote Data
-        try:
-            repository = f"{owner}/{repo}"
-            sha = GitHubRepoUtils.determine_sha(repository, version)
-            toml_text = GitHubRepoUtils.get_file_content(repository, "pyproject.toml", sha)
-        except Exception as e:
-            print(f"GitHub Error: {e}")
-            return False
+        repository = f"{owner}/{repo}"
+        sha = GitHubRepoUtils.determine_sha(repository, version)
+        toml_text = GitHubRepoUtils.get_file_content(repository, "pyproject.toml", sha)
 
         if not toml_text:
-            print("No pyproject.toml found in the repository, or no build-system found.")
-            return False
+            self.to_stdrout("No pyproject.toml found in the repository, or no build-system found.")
+            return self.fail()
 
         # 3. Process Build Systems
         repo_build_systems = self._parse_pyproject_build_system(toml_text)
@@ -42,9 +40,10 @@ class CheckBuildSystem(ReviewPointBase):
         diff = GitHubRepoUtils.fuzzy_diff(repo_build_systems, nix_build_systems)
         if diff:
             print(f"Mismatch found in build-system requirements. Diff: {diff}")
-            return False
+            self.to_stdrout(f"Mismatch found in build-system requirements. Diff: {diff}")
+            return self.fail(diff)
 
-        return True
+        return self.pass_()
 
     def _parse_pyproject_build_system(self, content: str) -> set[str]:
         """Parses pyproject.toml and strips version constraints."""

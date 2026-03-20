@@ -4,6 +4,9 @@ import subprocess
 
 from nix_picking.review.review_points.models import ReviewPointBase
 from nix_picking.review.repositories import GitHubRepoUtils
+from nix_picking.review.review_points.models.review_point_output import (
+    ReviewPointOutput,
+)
 
 
 @final
@@ -19,30 +22,42 @@ class CheckHashGitHub(ReviewPointBase):
         self._source = "https://nixos.org/manual/nixpkgs/stable/#fetchfromgithub"
 
     @override
-    def apply(self, file_content: dict[str, Any]) -> bool:
+    def apply(self, file_content: dict[str, Any]) -> ReviewPointOutput:
         owner, repo, ver = GitHubRepoUtils.extract_repo_info(file_content)
         if not (owner and repo and ver):
-            return False
+            self.to_stdrout(
+                "Could not identify GitHub repository or version from the Nix file."
+            )
+            return self.fail()
 
         hash = file_content.get("src", {}).get("hash", "")
         if not hash:
-            print("No hash found in the fetchFromGitHub function.")
-            return False
+            self.to_stdrout("No hash found in the fetchFromGitHub function.")
+            return self.fail()
 
         tag = GitHubRepoUtils.get_tag_from_version(f"{owner}/{repo}", ver)
         if not tag:
-            print(f"Could not find a matching tag for version '{ver}' in the repository.")
-            return False
+            print(
+                f"Could not find a matching tag for version '{ver}' in the repository."
+            )
+            self.to_stdrout(
+                f"Could not find a matching tag for version '{ver}' in the repository."
+            )
+            return self.fail()
 
         expected_hash = self._get_nix_git_hash(f"{owner}/{repo}", tag)
 
         if expected_hash != hash:
-            print(f"WARNING: Hash mismatch for {owner}/{repo} at tag '{tag}':")
-            print(f"  Expected: {expected_hash}")
-            print(f"  Found:    {hash}")
-            return False
+            self.to_stdrout(
+                """
+            WARNING: Hash mismatch for {owner}/{repo} at tag '{tag}':
+              Expected: {expected_hash}
+              Found:    {hash}
+            """
+            )
+            return self.fail({"expected": expected_hash, "found": hash})
 
-        return True
+        return self.pass_()
 
     def _get_nix_git_hash(self, repo: str, rev: str) -> str:
         repo_url = f"https://github.com/{repo}"
