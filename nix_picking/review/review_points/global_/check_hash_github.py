@@ -25,9 +25,6 @@ class CheckHashGitHub(ReviewPointBase):
     def apply(self, file_content: dict[str, Any]) -> ReviewPointOutput:
         owner, repo, ver = GitHubRepoUtils.extract_repo_info(file_content)
         if not (owner and repo and ver):
-            self.to_stdrout(
-                "Could not identify GitHub repository or version from the Nix file."
-            )
             return self.fail()
 
         hash = file_content.get("src", {}).get("hash", "")
@@ -37,9 +34,6 @@ class CheckHashGitHub(ReviewPointBase):
 
         tag = GitHubRepoUtils.get_tag_from_version(f"{owner}/{repo}", ver)
         if not tag:
-            print(
-                f"Could not find a matching tag for version '{ver}' in the repository."
-            )
             self.to_stdrout(
                 f"Could not find a matching tag for version '{ver}' in the repository."
             )

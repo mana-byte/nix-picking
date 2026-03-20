@@ -25,7 +25,6 @@ class CheckOptionalDeps(ReviewPointBase):
         # 1. Identify Repo
         owner, repo, version = GitHubRepoUtils.extract_repo_info(file_content)
         if not (owner and repo):
-            self.to_stdrout("Could not identify GitHub repository from the Nix file.")
             return self.fail()
 
         # 2. Fetch Remote Data

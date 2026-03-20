@@ -24,6 +24,7 @@ class Reviewer:
             self.owner, self.repo = fork.split("/") if "/" in fork else (None, None)
             if not self.owner or not self.repo:
                 raise ValueError(f"Invalid fork format: {fork}")
+        self.report = defaultdict(list)
 
     def _go_through_files(
         self,
@@ -49,18 +50,21 @@ class Reviewer:
                     global_points = Topics.get_points_by_topic(Topics.GLOBAL)
                     points.extend(global_points)
                 for point in points:
-                    print(point.apply(parsed_files[filename]).to_json())
+                    report = point.apply(parsed_files[filename])
+                    self.report[filename].append(report.to_dict())
 
             except ValueError:
                 print(f"Failed to parse {filename}, skipping.")
                 continue
 
-    def review(self, withGlobal: bool = True, additional_parse_levels: int = 1) -> None:
+    def review(
+        self, withGlobal: bool = True, additional_parse_levels: int = 1
+    ) -> dict[str, Any]:
         if not self.pr:
             print(
                 "No PR number provided, skipping review. If you want to review a local file use review_file() instead."
             )
-            return
+            return {}
         files = GitHubRepoUtils.fetch_pull_request_files(
             pr_number=self.pr,
             repo_full_name=f"{self.owner}/{self.repo}",
@@ -71,22 +75,24 @@ class Reviewer:
             withGlobal=withGlobal,
             additional_parse_levels=additional_parse_levels,
         )
+        return self.report
 
     def review_file(
         self,
         raw_nix_file: str,
         additional_parse_levels: int = 1,
         withGlobal: bool = True,
-    ) -> None:
+    ) -> dict[str, Any]:
         file = {"local_file.nix": raw_nix_file}
         self._go_through_files(
             file, withGlobal=withGlobal, additional_parse_levels=additional_parse_levels
         )
+        return self.report
 
 
 if __name__ == "__main__":
     reviewer = Reviewer(pr=500483)
     with open("tests/inputs/python/a2a-sdk/default.nix") as f:
         file = f.read()
-    reviewer.review_file(file)
+    print(reviewer.review_file(file))
     # reviewer.review()
