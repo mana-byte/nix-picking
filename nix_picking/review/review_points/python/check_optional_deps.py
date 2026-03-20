@@ -49,20 +49,17 @@ class CheckOptionalDeps(ReviewPointBase):
         # 3. Get deps from the Nix file
         nix_file_deps = self._extract_nix_opt_deps(file_content)
         if not nix_file_deps:
-            print("No dependencies found in the Nix file.")
-            return False
+            self.to_stdrout(
+                "Could not extract optional dependencies from the Nix file."
+            )
+            return self.fail()
 
         # 4. Compare
         diff = GitHubRepoUtils.fuzzy_diff(repo_deps, nix_file_deps)
         if diff:
-            self.to_stdrout(
-                """
-            WARNING: optional dependencies in the Nix file do not match the repository.
-            Repository: {repo_deps}
-            Nix file: {nix_file_deps}
-            Diff: {diff}
-            """
-            )
+            self.to_stdrout("Optional dependency mismatch \n")
+            self.to_stdrout(f"Repo optional dependencies: {repo_deps} \n")
+            self.to_stdrout(f"Nix file optional dependencies: {nix_file_deps} \n")
             return self.fail(diff)
 
         return self.pass_()

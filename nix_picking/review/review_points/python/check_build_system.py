@@ -38,8 +38,9 @@ class CheckBuildSystem(ReviewPointBase):
         # 4. Compare
         diff = GitHubRepoUtils.fuzzy_diff(repo_build_systems, nix_build_systems)
         if diff:
-            print(f"Mismatch found in build-system requirements. Diff: {diff}")
-            self.to_stdrout(f"Mismatch found in build-system requirements. Diff: {diff}")
+            self.to_stdrout("Build-system mismatch \n")
+            self.to_stdrout(f"Repo build-system: {repo_build_systems} \n")
+            self.to_stdrout(f"Nix file build-system: {nix_build_systems}")
             return self.fail(diff)
 
         return self.pass_()

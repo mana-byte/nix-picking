@@ -22,17 +22,19 @@ class ReviewPointBase:
         self.output.stdrout += input_str
 
     def fail(
-        self, output: list[str] | set[str] | dict[str, str] | None = None
+        self, output: list[str] | set[str] | dict[str, str] | None = None, message: str = ""
     ) -> ReviewPointOutput:
         self.output.passed = False
         self.output.output = output
+        self.to_stdrout(message)
         return self.output
 
     def pass_(
-        self, output: list[str] | set[str] | dict[str, str] | None = None
+        self, output: list[str] | set[str] | dict[str, str] | None = None, message: str = ""
     ) -> ReviewPointOutput:
         self.output.passed = True
         self.output.output = output
+        self.to_stdrout(message)
         return self.output
 
     @property

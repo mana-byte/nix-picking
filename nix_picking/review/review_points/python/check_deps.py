@@ -60,14 +60,9 @@ class CheckDeps(ReviewPointBase):
         # 4. Compare
         diff = GitHubRepoUtils.fuzzy_diff(repo_deps, nix_file_deps)
         if diff:
-            self.to_stdrout(
-                f"""
-            WARNING: Dependencies in the Nix file do not match the repo.
-            Repository: {repo_deps}
-            Nix file: {nix_file_deps}
-            Diff: {diff}
-            """
-            )
+            self.to_stdrout("Dependency mismatch \n")
+            self.to_stdrout(f"Repo dependencies: {repo_deps} \n")
+            self.to_stdrout(f"Nix file dependencies: {nix_file_deps} \n")
             return self.fail(diff)
 
         return self.pass_()
