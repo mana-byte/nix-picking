@@ -3,7 +3,6 @@ import toml
 from typing import final, override, Any
 
 from nix_picking.review.review_points.base import ReviewPointBase
-from nix_picking.review.services.github import GitHubService
 from nix_picking.review.review_points.utils import GitHubRepoUtils
 
 
@@ -27,24 +26,21 @@ class CheckOptionalDeps(ReviewPointBase):
 
         # 2. Fetch Remote Data
         repo_deps: set[str] = set()
-        github_service = GitHubService()
-        
-        with github_service.get_github_client() as g:
-            try:
-                repository = g.get_repo(f"{owner}/{repo}")
-                sha = GitHubRepoUtils.determine_sha(repository, version)
-                
-                # Check pyproject.toml
-                pyproject_str = GitHubRepoUtils.get_file_content(repository, "pyproject.toml", sha)
-                if pyproject_str:
-                    repo_deps.update(self._parse_pyproject_deps(pyproject_str))
-                    
-            except Exception as e:
-                print(f"GitHub Error: {e}")
-                return False
+
+        repository = f"{owner}/{repo}"
+        sha = GitHubRepoUtils.determine_sha(repository, version)
+
+        # Check pyproject.toml
+        pyproject_str = GitHubRepoUtils.get_file_content(
+            repository, "pyproject.toml", sha
+        )
+        if pyproject_str:
+            repo_deps.update(self._parse_pyproject_deps(pyproject_str))
 
         if not repo_deps:
-            print("No pyproject.toml found in the repository, or no optional dependencies found in it.")
+            print(
+                "No pyproject.toml found in the repository, or no optional dependencies found in it."
+            )
             return False
 
         # 3. Get deps from the Nix file
@@ -56,7 +52,9 @@ class CheckOptionalDeps(ReviewPointBase):
         # 4. Compare
         diff = GitHubRepoUtils.fuzzy_diff(repo_deps, nix_file_deps)
         if diff:
-            print("WARNING: optional dependencies in the Nix file do not match the repository.")
+            print(
+                "WARNING: optional dependencies in the Nix file do not match the repository."
+            )
             print(f"Repository: {repo_deps}")
             print(f"Nix file: {nix_file_deps}")
             print(f"Diff: {diff}")
@@ -74,7 +72,12 @@ class CheckOptionalDeps(ReviewPointBase):
                 if group_name == "all":
                     continue
                 if isinstance(group_deps, list):
-                    opt_deps.update({re.split(r'[>=<~!,;]', dep.lower())[0].strip() for dep in group_deps})
+                    opt_deps.update(
+                        {
+                            re.split(r"[>=<~!,;]", dep.lower())[0].strip()
+                            for dep in group_deps
+                        }
+                    )
             return opt_deps
         except Exception as e:
             return set()
@@ -92,4 +95,3 @@ class CheckOptionalDeps(ReviewPointBase):
                 if isinstance(group_deps, list):
                     output_opt_deps.update(set(group_deps))
         return output_opt_deps
-        

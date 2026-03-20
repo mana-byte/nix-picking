@@ -3,17 +3,23 @@ from typing import Any, final
 
 from nix_picking.parser import NixParser
 from nix_picking.parser.enums.builders import Builders
-from nix_picking.review.services.github import GitHubService
 from nix_picking.review.review_points.enums import Topics
+from nix_picking.review.review_points.utils import GitHubRepoUtils
 
 
 @final
 class Reviewer:
+
+    BLACK_LISTED_FILES = {
+        "pkgs/top-level/python-packages.nix",
+        "maintainers/maintainer-list.nix",
+        "pkgs/by-name/hy/hyprland/info.json",
+    }
+
     def __init__(self, pr: int | None, fork: str | None = None):
         self.pr = pr
         self.owner: str | None = "NixOS"
         self.repo: str | None = "nixpkgs"
-        self.github_service = GitHubService()
         if fork:
             self.owner, self.repo = fork.split("/") if "/" in fork else (None, None)
             if not self.owner or not self.repo:
@@ -58,8 +64,10 @@ class Reviewer:
                 "No PR number provided, skipping review. If you want to review a local file use review_file() instead."
             )
             return
-        files = self.github_service.fetch_pull_request_files(
-            pr_number=self.pr, repo_full_name=f"{self.owner}/{self.repo}"
+        files = GitHubRepoUtils.fetch_pull_request_files(
+            pr_number=self.pr,
+            repo_full_name=f"{self.owner}/{self.repo}",
+            black_listed_files=self.BLACK_LISTED_FILES,
         )
         self._go_through_files(
             files,

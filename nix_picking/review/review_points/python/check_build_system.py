@@ -1,9 +1,9 @@
 import re
+from github.Repository import Repository
 import toml
 from typing import final, override, Any
 
 from nix_picking.review.review_points.base import ReviewPointBase
-from nix_picking.review.services.github import GitHubService
 from nix_picking.review.review_points.utils import GitHubRepoUtils
 
 @final
@@ -23,15 +23,13 @@ class CheckBuildSystem(ReviewPointBase):
             return False
 
         # 2. Fetch Remote Data
-        github_service = GitHubService()
-        with github_service.get_github_client() as g:
-            try:
-                repository = g.get_repo(f"{owner}/{repo}")
-                sha = GitHubRepoUtils.determine_sha(repository, version)
-                toml_text = GitHubRepoUtils.get_file_content(repository, "pyproject.toml", sha)
-            except Exception as e:
-                print(f"GitHub Error: {e}")
-                return False
+        try:
+            repository = f"{owner}/{repo}"
+            sha = GitHubRepoUtils.determine_sha(repository, version)
+            toml_text = GitHubRepoUtils.get_file_content(repository, "pyproject.toml", sha)
+        except Exception as e:
+            print(f"GitHub Error: {e}")
+            return False
 
         if not toml_text:
             print("No pyproject.toml found in the repository, or no build-system found.")

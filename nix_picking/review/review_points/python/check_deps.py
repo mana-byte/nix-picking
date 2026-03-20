@@ -3,7 +3,6 @@ import toml
 from typing import final, override, Any
 
 from nix_picking.review.review_points.base import ReviewPointBase
-from nix_picking.review.services.github import GitHubService
 from nix_picking.review.review_points.utils import GitHubRepoUtils
 
 
@@ -27,29 +26,26 @@ class CheckDeps(ReviewPointBase):
 
         # 2. Fetch Remote Data
         repo_deps: set[str] = set()
-        github_service = GitHubService()
-        
-        with github_service.get_github_client() as g:
-            try:
-                repository = g.get_repo(f"{owner}/{repo}")
-                sha = GitHubRepoUtils.determine_sha(repository, version)
-                
-                # Check pyproject.toml
-                pyproject_str = GitHubRepoUtils.get_file_content(repository, "pyproject.toml", sha)
-                if pyproject_str:
-                    repo_deps.update(self._parse_pyproject_deps(pyproject_str))
-                
-                # Check requirements.txt (if it exists, merge them)
-                reqs_str = GitHubRepoUtils.get_file_content(repository, "requirements.txt", sha)
-                if reqs_str:
-                    repo_deps.update(self._parse_requirements_txt(reqs_str))
-                    
-            except Exception as e:
-                print(f"GitHub Error: {e}")
-                return False
+
+        repository = f"{owner}/{repo}"
+        sha = GitHubRepoUtils.determine_sha(repository, version)
+
+        # Check pyproject.toml
+        pyproject_str = GitHubRepoUtils.get_file_content(
+            repository, "pyproject.toml", sha
+        )
+        if pyproject_str:
+            repo_deps.update(self._parse_pyproject_deps(pyproject_str))
+
+        # Check requirements.txt (if it exists, merge them)
+        reqs_str = GitHubRepoUtils.get_file_content(repository, "requirements.txt", sha)
+        if reqs_str:
+            repo_deps.update(self._parse_requirements_txt(reqs_str))
 
         if not repo_deps:
-            print("No dependency files found in the repository, or no dependencies found in them.")
+            print(
+                "No dependency files found in the repository, or no dependencies found in them."
+            )
             return False
 
         # 3. Get deps from the Nix file

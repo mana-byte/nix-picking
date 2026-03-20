@@ -1,15 +1,55 @@
 import urllib.parse
 from typing import Any
-from github.Repository import Repository
-from github import GithubException
 import textdistance
-import subprocess
-import json
-
-from nix_picking.review.services.github import GitHubService
+from contextlib import contextmanager
+from github.PullRequest import PullRequest
+import os
+from github import (
+    Github,
+    Auth,
+    GithubException,
+    UnknownObjectException,
+)
 
 
 class GitHubRepoUtils:
+
+    @contextmanager
+    @staticmethod
+    def get_github_client(env_var_name: str = "ACCESS_TOKEN"):
+        """Context manager to get a GitHub client using an access token from environment variables."""
+        GITHUB_ACCESS_TOKEN = os.environ.get(env_var_name)
+        if not GITHUB_ACCESS_TOKEN:
+            raise ValueError(env_var_name + " environment variable is not set")
+        auth = Auth.Token(GITHUB_ACCESS_TOKEN)
+        with Github(auth=auth) as g:
+            yield g
+
+    @staticmethod
+    def fetch_pull_request_files(
+        pr_number: int, repo_full_name: str, black_listed_files: set[str] = set()
+    ) -> dict[str, str]:
+        pr_file_contents: dict[str, str] = {}
+        try:
+            with GitHubRepoUtils.get_github_client() as g:
+                repo = g.get_repo(repo_full_name)
+                pr: PullRequest = repo.get_pull(pr_number)
+                files = pr.get_files()
+                for file in files:
+                    if file.filename in black_listed_files:
+                        continue
+                    files_content = repo.get_contents(file.filename, ref=pr.head.sha)
+                    pr_file_contents[file.filename] = (
+                        files_content.decoded_content.decode("utf-8")
+                    )
+                return pr_file_contents
+        except UnknownObjectException as e:
+            raise ValueError(
+                f"Pull request #{pr_number} not found in repository {repo_full_name}"
+            )
+        except GithubException as e:
+            raise ValueError(f"GitHub API error: {e.data.get('message', str(e))}")
+
     @staticmethod
     def extract_repo_info(file_content: dict[str, Any]) -> tuple[str, str, str]:
         """Extracts (owner, repo, version) from Nix file content."""
@@ -31,8 +71,7 @@ class GitHubRepoUtils:
     @staticmethod
     def get_tag_from_version(repo: str, version: str) -> str:
         """Finds the tag name for a version, handling 'v' prefix."""
-        github_service = GitHubService()
-        with github_service.get_github_client() as g:
+        with GitHubRepoUtils.get_github_client() as g:
             repository = g.get_repo(repo)
             if not version:
                 return ""
@@ -47,30 +86,33 @@ class GitHubRepoUtils:
         return ""
 
     @staticmethod
-    def determine_sha(repository: Repository, version: str) -> str:
+    def determine_sha(repo: str, version: str) -> str:
         """Finds the commit SHA for a version/tag, handling 'v' prefix."""
-        if not version:
-            return repository.get_commits()[0].sha
-
-        target_tags = {version, f"v{version}"}
         try:
-            for tag in repository.get_tags():
-                if tag.name in target_tags:
-                    return tag.commit.sha
-        except GithubException:
-            pass
+            with GitHubRepoUtils.get_github_client() as g:
+                repository = g.get_repo(repo)
+                if not version:
+                    return repository.get_commits()[0].sha
 
-        return repository.get_commits()[0].sha
+                target_tags = {version, f"v{version}"}
+                for tag in repository.get_tags():
+                    if tag.name in target_tags:
+                        return tag.commit.sha
+            return repository.get_commits()[0].sha
+        except GithubException:
+            return ""
 
     @staticmethod
-    def get_file_content(repository: Repository, path: str, sha: str = "") -> str:
+    def get_file_content(repo: str, path: str, sha: str = "") -> str:
         """Fetches raw text content of a file at a specific SHA."""
         try:
-            kwargs = {"ref": sha} if sha else {}
-            content = repository.get_contents(path, **kwargs)
-            if isinstance(content, list):
-                content = content[0]
-            return content.decoded_content.decode("utf-8")
+            with GitHubRepoUtils.get_github_client() as g:
+                repository = g.get_repo(repo)
+                kwargs = {"ref": sha} if sha else {}
+                content = repository.get_contents(path, **kwargs)
+                if isinstance(content, list):
+                    content = content[0]
+                return content.decoded_content.decode("utf-8")
         except (GithubException, UnicodeDecodeError):
             return ""
 
