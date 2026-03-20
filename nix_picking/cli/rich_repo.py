@@ -28,6 +28,19 @@ Reviews from dict has this format:
 class ReviewPrintRepo:
 
     @staticmethod
+    def get_random_spinner() -> str:
+        import random
+        spinners = [
+            "bouncingBall",
+            "point",
+            "bouncingBar",
+            "dots",
+            "line",
+            "simpleDotsScrolling",
+        ]
+        return random.choice(spinners)
+
+    @staticmethod
     def print_review_report(
         review_dict: dict[str, Any], console: Console, verbose: bool = True
     ) -> None:

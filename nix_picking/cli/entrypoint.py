@@ -1,12 +1,14 @@
 import click
 from rich.console import Console
-from rich.panel import Panel
-from rich.json import JSON
-from typing import Any
 from nix_picking.cli.reviewer_handler import ReviewHandler
 from nix_picking.cli.rich_repo import ReviewPrintRepo
+from rich.live import Live
+from rich.spinner import Spinner
 
 console = Console()
+spinner = Spinner(
+    name=ReviewPrintRepo.get_random_spinner(), text="Working", style="bold green"
+)
 
 
 @click.group()
@@ -34,9 +36,10 @@ def cli():
 def review(pr: int, verbose: bool, with_global: bool, additional_parse_levels: int):
     """Review a PR."""
     handler = ReviewHandler(pr=pr)
-    result = handler.review(
-        withGlobal=with_global, additional_parse_levels=additional_parse_levels
-    )
+    with Live(spinner, console=console, refresh_per_second=10) as live:
+        result = handler.review(
+            withGlobal=with_global, additional_parse_levels=additional_parse_levels
+        )
     ReviewPrintRepo.print_review_report(result, console, verbose=verbose)
 
 
@@ -65,11 +68,12 @@ def review_file(
     with open(nix_file, "r") as f:
         raw_nix_file = f.read()
     handler = ReviewHandler()
-    result = handler.review_file(
-        raw_nix_file=raw_nix_file,
-        withGlobal=with_global,
-        additional_parse_levels=additional_parse_levels,
-    )
+    with Live(spinner, console=console, refresh_per_second=10) as live:
+        result = handler.review_file(
+            raw_nix_file=raw_nix_file,
+            withGlobal=with_global,
+            additional_parse_levels=additional_parse_levels,
+        )
     ReviewPrintRepo.print_review_report(result, console, verbose=verbose)
 
 
