@@ -18,7 +18,7 @@ def cli():
 
 
 @cli.command()
-@click.option("--pr", type=int, required=True, help="PR number to review")
+@click.argument("pr", type=int)
 @click.option(
     "--verbose/--no-verbose",
     default=False,
@@ -33,7 +33,7 @@ def cli():
     default=1,
     help="Additional parse levels for review",
 )
-def review(pr: int, verbose: bool, with_global: bool, additional_parse_levels: int):
+def pr(pr: int, verbose: bool, with_global: bool, additional_parse_levels: int):
     """Review a PR."""
     handler = ReviewHandler(pr=pr)
     with Live(spinner, console=console, refresh_per_second=10) as live:
@@ -44,7 +44,7 @@ def review(pr: int, verbose: bool, with_global: bool, additional_parse_levels: i
 
 
 @cli.command()
-@click.argument("nix-file", type=click.Path(exists=True))
+@click.argument("nix-file", type=click.Path())
 @click.option(
     "--verbose/--no-verbose",
     default=False,
@@ -61,12 +61,20 @@ def review(pr: int, verbose: bool, with_global: bool, additional_parse_levels: i
     default=1,
     help="Additional parse levels for review",
 )
-def review_file(
+def file(
     nix_file: str, verbose: bool, with_global: bool, additional_parse_levels: int
 ):
-    """Review a Nix file."""
-    with open(nix_file, "r") as f:
-        raw_nix_file = f.read()
+    """Review a local Nix file."""
+    if not nix_file.endswith(".nix"):
+        console.print(f"[bold red]Error: {nix_file} is not a .nix file.")
+        return
+    try:
+        with open(nix_file, "r") as f:
+            raw_nix_file = f.read()
+    except Exception as e:
+        console.print(f"[bold red]Error reading file {nix_file}: {e}")
+        return
+
     handler = ReviewHandler()
     with Live(spinner, console=console, refresh_per_second=10) as live:
         result = handler.review_file(
