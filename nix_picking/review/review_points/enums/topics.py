@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Any
 
 from nix_picking.parser.enums.builders import Builders
-from nix_picking.review.review_points.base import ReviewPointBase
+from nix_picking.review.review_points.models import ReviewPointBase
 from nix_picking.review.review_points.python import python_points
 from nix_picking.review.review_points.global_ import global_points
 

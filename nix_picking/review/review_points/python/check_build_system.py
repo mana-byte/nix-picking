@@ -2,7 +2,7 @@ import re
 import toml
 from typing import final, override, Any
 
-from nix_picking.review.review_points.base import ReviewPointBase
+from nix_picking.review.review_points.models import ReviewPointBase
 from nix_picking.review.repositories import GitHubRepoUtils
 
 @final

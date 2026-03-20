@@ -2,7 +2,7 @@ import re
 import toml
 from typing import final, override, Any
 
-from nix_picking.review.review_points.base import ReviewPointBase
+from nix_picking.review.review_points.models import ReviewPointBase
 from nix_picking.review.repositories import GitHubRepoUtils
 
 
@@ -69,14 +69,14 @@ class CheckDeps(ReviewPointBase):
         """Parses [project.dependencies] from pyproject.toml."""
         try:
             data = toml.loads(content)
-            deps_list = data.get("project", {}).get("dependencies", [])
+            deps_list: list[str] = data.get("project", {}).get("dependencies", [])
             return {re.split(r"[>=<~!,;]", d.lower())[0].strip() for d in deps_list}
         except Exception:
             return set()
 
     def _parse_requirements_txt(self, content: str) -> set[str]:
         """Parses requirements.txt, stripping versions and comments."""
-        deps = set()
+        deps: set[str] = set()
         for line in content.splitlines():
             line = line.strip()
             if not line or line.startswith("#") or line.startswith("-r"):

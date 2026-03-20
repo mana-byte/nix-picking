@@ -1,6 +1,6 @@
 import sys, inspect
 
-from nix_picking.review.review_points.base import ReviewPointBase
+from nix_picking.review.review_points.models import ReviewPointBase
 
 from .check_deps import CheckDeps
 from .check_build_system import CheckBuildSystem

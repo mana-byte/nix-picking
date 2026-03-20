@@ -2,7 +2,7 @@ import re
 import toml
 from typing import final, override, Any
 
-from nix_picking.review.review_points.base import ReviewPointBase
+from nix_picking.review.review_points.models import ReviewPointBase
 from nix_picking.review.repositories import GitHubRepoUtils
 
 
@@ -35,7 +35,7 @@ class CheckOptionalDeps(ReviewPointBase):
             repository, "pyproject.toml", sha
         )
         if pyproject_str:
-            repo_deps.update(self._parse_pyproject_deps(pyproject_str))
+            repo_deps.update(self._parse_pyproject_opt_deps(pyproject_str))
 
         if not repo_deps:
             print(
@@ -44,7 +44,7 @@ class CheckOptionalDeps(ReviewPointBase):
             return False
 
         # 3. Get deps from the Nix file
-        nix_file_deps = self._extract_nix_deps(file_content)
+        nix_file_deps = self._extract_nix_opt_deps(file_content)
         if not nix_file_deps:
             print("No dependencies found in the Nix file.")
             return False
@@ -62,12 +62,14 @@ class CheckOptionalDeps(ReviewPointBase):
 
         return True
 
-    def _parse_pyproject_deps(self, content: str) -> set[str]:
+    def _parse_pyproject_opt_deps(self, content: str) -> set[str]:
         """Parses [project.dependencies] from pyproject.toml."""
         try:
             data = toml.loads(content)
-            deps_group_list = data.get("project", {}).get("optional-dependencies", {})
-            opt_deps = set()
+            deps_group_list: dict[str, str] = data.get("project", {}).get(
+                "optional-dependencies", {}
+            )
+            opt_deps: set[str] = set()
             for group_name, group_deps in deps_group_list.items():
                 if group_name == "all":
                     continue
@@ -82,7 +84,7 @@ class CheckOptionalDeps(ReviewPointBase):
         except Exception as e:
             return set()
 
-    def _extract_nix_deps(self, file_content: dict[str, Any]) -> set[str]:
+    def _extract_nix_opt_deps(self, file_content: dict[str, Any]) -> set[str]:
         """Safely extract Nix dependencies based on dictionary structure."""
         deps = file_content.get("optional-dependencies", {})
         output_opt_deps = set()

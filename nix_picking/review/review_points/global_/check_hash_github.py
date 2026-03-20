@@ -2,7 +2,7 @@ from typing import Any, final, override
 import json
 import subprocess
 
-from nix_picking.review.review_points.base import ReviewPointBase
+from nix_picking.review.review_points.models import ReviewPointBase
 from nix_picking.review.repositories import GitHubRepoUtils
 
 
