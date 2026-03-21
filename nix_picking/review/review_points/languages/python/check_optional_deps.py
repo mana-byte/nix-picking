@@ -37,9 +37,11 @@ class CheckOptionalDeps(PythonReviewPoint):
         )
         if pyproject_str:
             repo_deps.update(self._parse_pyproject_opt_deps(pyproject_str))
+        else:
+            return self.skip(message="No pyproject.toml found in the repository.")
 
         if not repo_deps:
-            return self.skip(message="No pyproject.toml found in the repository, or no optional dependencies found in it.")
+            return self.skip(message="No optional dependencies found in the repository's pyproject.toml.")
 
         # 3. Get deps from the Nix file
         nix_file_deps = self._extract_nix_opt_deps(file_content)

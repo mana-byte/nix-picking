@@ -29,14 +29,18 @@ class CheckBuildSystem(PythonReviewPoint):
         repository = f"{owner}/{repo}"
         sha = GitHubRepoUtils.determine_sha(repository, version)
         toml_text = GitHubRepoUtils.get_file_content(repository, "pyproject.toml", sha)
-
         if not toml_text:
             return self.skip(
-                message="No pyproject.toml found in the repository, or no build-system found."
+                message="No pyproject.toml found in the repository."
+            )
+
+        repo_build_systems = self._parse_pyproject_build_system(toml_text)
+        if not repo_build_systems:
+            return self.skip(
+                message="No build-system specified in pyproject.toml or failed to parse it."
             )
 
         # 3. Process Build Systems
-        repo_build_systems = self._parse_pyproject_build_system(toml_text)
         nix_build_systems = self._get_nix_build_systems(file_content)
 
         # 4. Compare
