@@ -5,7 +5,7 @@ from typing import Any, final
 @final
 class ReviewHandler:
     def __init__(self, pr: int | None = None, fork: str | None = None):
-        self.reviewer = Reviewer(pr=pr)
+        self.reviewer = Reviewer(pr=pr, fork=fork)
 
     def review(
         self, withGlobal: bool = True, additional_parse_levels: int = 1
