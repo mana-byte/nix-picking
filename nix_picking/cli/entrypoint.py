@@ -33,9 +33,21 @@ def cli():
     default=1,
     help="Additional parse levels for review",
 )
-def pr(pr: int, verbose: bool, with_global: bool, additional_parse_levels: int):
+@click.option(
+    "--fork",
+    type=str,
+    default=None,
+    help="Fork to review PR from, in format owner/repo (e.g. user/nixpkgs)",
+)
+def pr(
+    pr: int,
+    verbose: bool,
+    with_global: bool,
+    additional_parse_levels: int,
+    fork: str,
+):
     """Nit pick (Review) a Nixpkgs PR."""
-    handler = ReviewHandler(pr=pr)
+    handler = ReviewHandler(pr=pr, fork=fork)
     with Live(spinner, console=console, refresh_per_second=10) as live:
         result = handler.review(
             withGlobal=with_global, additional_parse_levels=additional_parse_levels
@@ -61,9 +73,7 @@ def pr(pr: int, verbose: bool, with_global: bool, additional_parse_levels: int):
     default=1,
     help="Additional parse levels for review",
 )
-def file(
-    nix_file: str, verbose: bool, with_global: bool, additional_parse_levels: int
-):
+def file(nix_file: str, verbose: bool, with_global: bool, additional_parse_levels: int):
     """Nit pick (Review) a local Nix file."""
     if not nix_file.endswith(".nix"):
         console.print(f"[bold red]Error: {nix_file} is not a .nix file.")
@@ -83,6 +93,7 @@ def file(
             additional_parse_levels=additional_parse_levels,
         )
     ReviewPrintRepo.print_review_report(result, console, verbose=verbose)
+
 
 if __name__ == "__main__":
     cli()

@@ -1,9 +1,10 @@
 from nix_picking.review.reviewer import Reviewer
 from typing import Any, final
 
+
 @final
 class ReviewHandler:
-    def __init__(self, pr: int | None = None):
+    def __init__(self, pr: int | None = None, fork: str | None = None):
         self.reviewer = Reviewer(pr=pr)
 
     def review(
