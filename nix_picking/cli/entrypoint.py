@@ -13,7 +13,7 @@ spinner = Spinner(
 
 @click.group()
 def cli():
-    """CLI for ReviewHandler: Review PRs or Nix files."""
+    """Nit pick Nixpkgs PRs and files via naïve parsing and processing."""
     pass
 
 
@@ -34,7 +34,7 @@ def cli():
     help="Additional parse levels for review",
 )
 def pr(pr: int, verbose: bool, with_global: bool, additional_parse_levels: int):
-    """Review a PR."""
+    """Nit pick (Review) a Nixpkgs PR."""
     handler = ReviewHandler(pr=pr)
     with Live(spinner, console=console, refresh_per_second=10) as live:
         result = handler.review(
@@ -64,7 +64,7 @@ def pr(pr: int, verbose: bool, with_global: bool, additional_parse_levels: int):
 def file(
     nix_file: str, verbose: bool, with_global: bool, additional_parse_levels: int
 ):
-    """Review a local Nix file."""
+    """Nit pick (Review) a local Nix file."""
     if not nix_file.endswith(".nix"):
         console.print(f"[bold red]Error: {nix_file} is not a .nix file.")
         return

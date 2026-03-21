@@ -56,6 +56,10 @@ class ReviewPointBase:
         self.to_stdrout(message)
         return self.output
 
+    @classmethod
+    def create(cls) -> "ReviewPointBase":
+        return cls()
+
     @property
     def name(self) -> str:
         if not self._name:

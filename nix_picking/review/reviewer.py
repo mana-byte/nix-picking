@@ -53,9 +53,8 @@ class Reviewer:
                     )
                     point_classes.update(global_point_classes)
                 for ReviewPointClass in point_classes:
-                    # WARNING: LSP might not recognize this as a class but it is one.
-                    point = ReviewPointClass()
-                    report = point.apply(parsed_files[filename])
+                    point = ReviewPointClass.create()
+                    report = point.apply(parsed_files.get(filename, {}))
                     self.report[filename].append(report.to_dict())
 
             except ValueError:
