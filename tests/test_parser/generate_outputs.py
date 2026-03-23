@@ -10,7 +10,7 @@ from tests.utils import list_files_recursive
 
 if __name__ == "__main__":
     import json
-    from tests import INPUT_DIR, OUTPUT_DIR
+    from tests.test_parser import INPUT_DIR, OUTPUT_DIR
     from nix_picking.parser.nixparser import NixParser
 
     inputs_names = list_files_recursive(INPUT_DIR)

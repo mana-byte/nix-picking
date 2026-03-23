@@ -10,13 +10,13 @@ Reviews from dict has this format:
   "local_file.nix": [
     {
       "review_point": "CheckBuildSystem",
-      "passed": true,
+      "passed": ReviewPointStatus.PASSED,
       "stdout": "",
       "output": null
     },
     {
       "review_point": "CheckHashGitHub",
-      "passed": true,
+      "passed": ReviewPointStatus.FAILED,
       "stdout": "",
       "output": null
     }

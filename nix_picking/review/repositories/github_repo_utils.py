@@ -56,6 +56,9 @@ class GitHubRepoUtils:
         src = file_content.get("src", {})
         version = file_content.get("version", "")
 
+        if not isinstance(src, dict):
+            return "", "", ""
+
         if src.get("function") == "fetchFromGitHub":
             return src.get("owner", ""), src.get("repo", ""), version
 

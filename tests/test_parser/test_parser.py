@@ -1,6 +1,6 @@
 import json
 import pytest
-from tests import INPUT_DIR, OUTPUT_DIR
+from tests.test_parser import INPUT_DIR, OUTPUT_DIR
 from nix_picking.parser.nixparser import NixParser
 from tests.utils import list_files_recursive
 
