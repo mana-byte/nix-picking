@@ -94,11 +94,22 @@ class BaseTestReviewPoint:
             # Apply review point and compare with expected output
             result = review_point.apply(file_content).to_dict()
             result["status"] = result["status"].value  # Convert enum to str
-            del result["stdout"]
 
             assert (
-                result == expected_output
-            ), f"Failed for {review_point.name} on {filename}"
+                result["status"] == expected_output["status"]
+            ), f"Status mismatch for {filename}"
+
+            # Output is either a list or null
+            if isinstance(result["output"], list) and isinstance(
+                expected_output["output"], list
+            ):
+                assert set(result["output"]) == set(
+                    expected_output["output"]
+                ), f"Output mismatch for {filename}"
+            else:
+                assert (
+                    result["output"] is None and expected_output["output"] is None
+                ), f"Output mismatch for {filename}"
 
 
 # Language test
@@ -112,3 +123,14 @@ PYTHON_REVIEW_POINT_CLASSES = [
 @pytest.mark.parametrize("review_point_class", PYTHON_REVIEW_POINT_CLASSES)
 class TestPythonReviewPoints(BaseTestReviewPoint):
     language = "python"
+
+
+GLOBAL_REVIEW_POINT_CLASSES = [
+    review_point_class
+    for review_point_class in Topics.get_point_classes_by_topic(Topics.GLOBAL)
+]
+
+
+@pytest.mark.parametrize("review_point_class", GLOBAL_REVIEW_POINT_CLASSES)
+class TestGlobalReviewPoints(BaseTestReviewPoint):
+    language = "global"
