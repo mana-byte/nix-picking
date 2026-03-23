@@ -1,0 +1,8 @@
+{
+  "review_point": "CheckOptionalDeps",
+  "status": "FAILED",
+  "output": [
+      "a2a-sdk[postgresql",
+      "sqlalchemy[asyncio"
+  ]
+}

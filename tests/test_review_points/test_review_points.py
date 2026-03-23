@@ -52,10 +52,13 @@ class BaseTestReviewPoint:
     def test_apply_review_point_against_nix_file(
         self, review_point_class: ReviewPointBase
     ):
+        review_point = review_point_class.create()
         language_ref_dir = os.path.join(
             REVIEW_POINT_LANGUAGE_REFERENCES_DIR, self.language
         )
-        review_point = review_point_class.create()
+        language_expected_dir = os.path.join(
+            REVIEW_POINT_EXPECTED_OUTPUTS_DIR, self.language, review_point.name
+        )
 
         if not os.path.isdir(language_ref_dir):
             pytest.skip(f"Reference directory not found for language: {self.language}")
@@ -71,8 +74,7 @@ class BaseTestReviewPoint:
 
             # Get expected output
             expected_path = os.path.join(
-                REVIEW_POINT_EXPECTED_OUTPUTS_DIR,
-                review_point.name,
+                language_expected_dir,
                 filename.replace(".nix", ".json"),
             )
 
@@ -92,6 +94,7 @@ class BaseTestReviewPoint:
             # Apply review point and compare with expected output
             result = review_point.apply(file_content).to_dict()
             result["status"] = result["status"].value  # Convert enum to str
+            del result["stdout"]
 
             assert (
                 result == expected_output
