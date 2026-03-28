@@ -147,7 +147,9 @@ class NixParser:
 
         return val
 
-    def parse(self, nix_expression_or_lines: list[str] | str, additional_levels: int = 1) -> dict[str, Any]:
+    def parse(
+        self, nix_expression_or_lines: list[str] | str, additional_levels: int = 1
+    ) -> dict[str, Any]:
         """
         Parse the first two levels of the nix expression into a dictionary.
         This is meant to be used for the nix packaging expressions of nixpkgs. See NixOS/nixpkgs for more info.
