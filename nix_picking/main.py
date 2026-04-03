@@ -1,206 +1,92 @@
-import re
-import json
+import tree_sitter_nix
+from tree_sitter import Language, Parser, Query, QueryCursor
 
 
-def clean_comments(text: str) -> str:
-    """Removes Nix-style # comments."""
-    return re.sub(r"(?m)\s*#.*$", "", text)
+def nix_to_python(node, source_code: bytes):
+    """Recursively converts a Tree-sitter Nix node into a Python object."""
+    node_type = node.type
+
+    if node_type == "string_expression":
+        text = source_code[node.start_byte : node.end_byte].decode("utf-8")
+        if text.startswith('""') and text.endswith('""'):
+            return ""
+        if text.startswith('"'):
+            return text[1:-1]
+        if text.startswith("''"):
+            return text[2:-2].strip()
+        return text
+
+    elif node_type == "list_expression":
+        return [
+            nix_to_python(c, source_code)
+            for c in node.children
+            if c.type not in ["(", ")", "[", "]", "{", "}", ";", ","]
+        ]
+
+    elif node_type in ["attrset_expression", "rec_attrset_expression"]:
+        result = {}
+        for child in node.children:
+            if child.type == "binding":
+                attrpath = child.child_by_field_name("attrpath")
+                expression = child.child_by_field_name("expression")
+                if attrpath and expression:
+                    key = source_code[attrpath.start_byte : attrpath.end_byte].decode(
+                        "utf-8"
+                    )
+                    result[key] = nix_to_python(expression, source_code)
+        return result
+
+    elif node_type == "boolean_expression":
+        return source_code[node.start_byte : node.end_byte].decode("utf-8") == "true"
+
+    elif node_type == "integer_expression":
+        return int(source_code[node.start_byte : node.end_byte].decode("utf-8"))
+
+    elif node_type == "apply_expression":
+        func_node = node.children[0]
+        return source_code[func_node.start_byte : func_node.end_byte].decode("utf-8")
+
+    return source_code[node.start_byte : node.end_byte].decode("utf-8")
 
 
-def split_depth_aware(text: str, delimiter: str = ";") -> list:
+def get_nix_attribute_value(file_path: str, attribute_path: str, raw: bool = False):
     """
-    Splits by delimiter at depth 0.
-    Crucially ignores the first ';' after a 'with' keyword to keep assignments intact.
+    Finds a Nix attribute and returns either a Python object or the raw string.
     """
-    statements = []
-    current = ""
-    depth = 0
-    in_with_header = False
-    i = 0
-    d_len = len(delimiter)
+    lang_data = tree_sitter_nix.language()
+    NIX_LANGUAGE = Language(lang_data)
+    parser = Parser(NIX_LANGUAGE)
 
-    while i < len(text):
-        char = text[i]
-        # Track nesting
-        if char in "{[(":
-            depth += 1
-        elif char in "}])":
-            depth -= 1
+    with open(file_path, "rb") as f:
+        source_code = f.read()
 
-        # Detect 'with ' at depth 0 to protect the following semicolon
-        if depth == 0 and text[i : i + 5] == "with ":
-            in_with_header = True
+    tree = parser.parse(source_code)
+    parts = attribute_path.split(".")
+    current_node = tree.root_node
 
-        if depth == 0 and text[i : i + d_len] == delimiter:
-            # If we are inside a 'with' header and hit a semicolon, don't split!
-            if in_with_header and delimiter == ";":
-                in_with_header = False
-                current += char
-                i += d_len
-                continue
-            else:
-                if current.strip():
-                    statements.append(current.strip())
-                current = ""
-                i += d_len
-                continue
-        else:
-            current += char
-            i += 1
+    for part in parts:
+        query_str = f"""
+            (binding 
+                attrpath: (attrpath (identifier) @name (#eq? @name "{part}"))
+                expression: (_) @value)
+        """
+        query = Query(NIX_LANGUAGE, query_str)
+        cursor = QueryCursor(query)
+        captures = cursor.captures(current_node)
 
-    if current.strip():
-        statements.append(current.strip())
-    return [s.strip() for s in statements]
+        value_nodes = captures.get("value", [])
+        if not value_nodes:
+            return None
+
+        current_node = value_nodes[0]
+
+    if raw:
+        return current_node.text
+    return nix_to_python(current_node, source_code)
 
 
-def parse_nix_lazy(raw_value: str):
-    if not isinstance(raw_value, str):
-        return raw_value
+path = "tests/test_parser/assets/inputs/python/a2a-sdk/default.nix"
 
-    val = clean_comments(raw_value).strip()
+value = get_nix_attribute_value(path, "disabledTests", raw=True)
 
-    # --- STEP 0: Strip Lambda Header { lib, ... }: ---
-    if val.startswith("{"):
-        depth = 0
-        for i in range(len(val)):
-            if val[i] == "{":
-                depth += 1
-            elif val[i] == "}":
-                depth -= 1
-            if depth == 0 and val[i : i + 2] == "}:":
-                val = val[i + 2 :].strip()
-                break
-
-    # --- STEP 1: Handle Concatenation (++) ---
-    if "++" in val:
-        parts = split_depth_aware(val, "++")
-        if len(parts) > 1:
-            return {"_type": "concatenation", "parts": parts}
-
-    # --- STEP 2: Handle Derivation Wrapper ---
-    wrapper_pattern = r"^([a-zA-Z0-9_-]+)\s+(?:rec\s+)?(?:\((.*?):\s*)?\{(.*)\}\s*\)?$"
-    match = re.match(wrapper_pattern, val, re.DOTALL)
-    if match:
-        fname, fargs, fbody = match.groups()
-        return {
-            "_type": "derivation_wrapper",
-            "function": fname,
-            "fp_args": fargs.strip() if fargs else None,
-            "content": parse_nix_lazy("{" + fbody + "}"),
-        }
-
-    # --- STEP 3: Handle 'with' Scoping ---
-    if val.startswith("with "):
-        # Find the first semicolon at depth 0
-        # We use split_depth_aware to find the pivot point
-        parts = split_depth_aware(val, ";")
-        if len(parts) > 1:
-            # First part is "with lib.maintainers", rest is the body
-            header = parts[0]
-            body = "; ".join(parts[1:])
-            return {
-                "_type": "with_scope",
-                "scope": header[5:].strip(),
-                "body": body.strip(),
-            }
-
-    # --- STEP 4: Handle Function Calls (lib.optionals ...) ---
-    func_call_match = re.match(r"^([a-zA-Z0-9._-]+)\s+([\(\{\[])", val)
-    if func_call_match:
-        f_name = func_call_match.group(1)
-        return {
-            "_type": "function_call",
-            "function": f_name,
-            "raw_args": val[len(f_name) :].strip(),
-        }
-
-    # --- STEP 5: Standard Unwrapping ---
-    if val.startswith("(") and val.endswith(")"):
-        return parse_nix_lazy(val[1:-1].strip())
-
-    if val.startswith("{") and val.endswith("}"):
-        inner = val[1:-1].strip()
-        res = {}
-        for stmt in split_depth_aware(inner, ";"):
-            if stmt.startswith("inherit "):
-                res["_inherit"] = (
-                    res.get("_inherit", []) + stmt.replace("inherit", "").split()
-                )
-            elif "=" in stmt:
-                k, v = stmt.split("=", 1)
-                res[k.strip()] = v.strip()
-        return res
-
-    if val.startswith("[") and val.endswith("]"):
-        return [item for item in split_depth_aware(val[1:-1].strip(), " ") if item]
-
-    return val
-
-
-def parse_nix_full(input_data):
-    if isinstance(input_data, str):
-        node = parse_nix_lazy(input_data)
-    else:
-        node = input_data
-
-    if isinstance(node, dict):
-        n_type = node.get("_type")
-
-        if n_type == "concatenation":
-            flattened = []
-            for p in node["parts"]:
-                parsed = parse_nix_full(p)
-                if isinstance(parsed, list):
-                    flattened.extend(parsed)
-                else:
-                    flattened.append(parsed)
-            return flattened
-
-        if n_type == "derivation_wrapper":
-            return {
-                "_type": "derivation",
-                "function": node["function"],
-                "args": parse_nix_full(node["content"]),
-            }
-
-        if n_type == "with_scope":
-            return {
-                "_type": "with_scope",
-                "scope": node["scope"],
-                "body": parse_nix_full(node["body"]),
-            }
-
-        if n_type == "function_call":
-            args_list = split_depth_aware(node["raw_args"], " ")
-            return {
-                "_type": "function_call",
-                "function": node["function"],
-                "args": [parse_nix_full(a) for a in args_list],
-            }
-
-        # Attribute Set recursion
-        res = {}
-        for k, v in node.items():
-            if k in ["_type", "function", "fp_args"]:
-                continue
-            res[k] = v if k == "_inherit" else parse_nix_full(v)
-        return res
-
-    if isinstance(node, list):
-        return [parse_nix_full(item) for item in node]
-
-    # Quote cleaning
-    if isinstance(node, str):
-        node = node.strip()
-        if node.startswith('"') and node.endswith('"'):
-            return node[1:-1]
-    return node
-
-
-path = "tests/test_parser/assets/inputs/python/testing/default.nix"
-with open(path, "r") as f:
-    file = f.read()
-
-data = parse_nix_full(file)
-
-print(json.dumps(data, indent=2))
+print(value)
